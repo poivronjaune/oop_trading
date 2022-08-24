@@ -1,3 +1,4 @@
+import os
 import yfinance as yf
 import pandas as pd
 import numpy as np
@@ -5,8 +6,11 @@ import ta
 import matplotlib.pyplot as plt
 
 class Backtest:
-    def __init__(self, symbol) -> None:
+    def __init__(self, symbol=None):
         self.symbol = symbol
+        if symbol is None:
+            self.symbol = 'AAPL'
+        
         self.df = yf.download(self.symbol, start='2019-01-01')
         if self.df.empty:
             raise ValueError(f"No data pulled for symbol {symbol}")
@@ -72,10 +76,10 @@ class Backtest:
 
         #plt.show()
 
-    def log_trades(self, file=None):
-        path_str = 'LOG'
-        if file is None:
-            file = 'trades.csv'
+    def log_trades(self, file_name=None):
+        path_str = 'LOG\\'
+        if file_name is None:
+            file_name = 'trades.csv'
         
         trades_df = pd.DataFrame(data=self.buy_arr)
         trades_df = trades_df.reset_index()
@@ -86,6 +90,6 @@ class Backtest:
         trades_df['profit_ratio'] = self.profit
         trades_df['profit_value'] = trades_df['sell_price'] - trades_df['buy_price']
 
-        trades_df.to_csv(f"{path_str}\{file}", index=False)
+        trades_df.to_csv(f"{os.path.join(path_str,file_name)}", index=False)
         
             

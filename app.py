@@ -24,7 +24,8 @@ def main():
         return
 
     # print(f"Symbol: {instance.symbol}")
-    # print(f"Prices: {instance.df}")
+    print(f"Prices: {instance.df}")
+    print(f"DF Columns: {instance.df.columns.tolist()}")
     # print(f"Buy prices: {instance.buy_arr}")
     # print(f"Sell prices: {instance.sell_arr}")
     # print(f"Profit per trade: {instance.profit}")

@@ -1,5 +1,6 @@
-# Custom ignores
+# Custom project ignores
 LOG/
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

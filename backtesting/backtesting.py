@@ -5,7 +5,6 @@ import numpy as np
 import ta
 import matplotlib.pyplot as plt
 
-
 class Backtest:
     def __init__(self, symbol=None):
         self.symbol = symbol
@@ -18,10 +17,6 @@ class Backtest:
 
         self.calc_indicators()
         self.generate_signals()
-        self.run_trades()
-        self.profit = self.calc_profit()
-        self.max_drawdown = self.profit.min()
-        self.cumulative_profit = (self.profit + 1).prod() - 1
 
     def calc_indicators(self):
         self.df["ma_20"] = self.df.Close.rolling(20).mean()
@@ -64,13 +59,22 @@ class Backtest:
             selldates
         ].Open  # Use buydates index (date) to get the open price of the buy trade
 
-    def calc_profit(self):
+    def calculate_relative_profits(self):
         # Calculate profits only for closed trades and filter out the open trades
         # if open position, then the last buy_signal is greater the the last sell_signal (buy_arr length is greater than sell_arr length)
         if self.buy_arr.index[-1] > self.sell_arr.index[-1]:
             self.buy_arr = self.buy_arr[:-1]
 
         return (self.sell_arr.values - self.buy_arr.values) / self.buy_arr.values
+
+    def analyze_trades(self):
+        
+        self.calculate_relative_profits()
+        #self.profit = self.calc_profit()
+        #self.max_drawdown = self.profit.min()
+        #self.cumulative_profit = (self.profit + 1).prod() - 1
+
+
 
     def plot_chart(self):
         plt.figure(figsize=(10, 5))

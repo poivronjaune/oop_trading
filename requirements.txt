@@ -8,4 +8,5 @@ ta
 # Testing and dev packages (can be moved to a specific test requirements file)
 pytest
 pytest-cov
+coverage
 black

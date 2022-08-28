@@ -21,6 +21,7 @@ def main():
     symbol, log_file = argv_parse()
     try:
         instance = Backtest(symbol)
+        instance.run_trades()
     except Exception as e:
         print(f"\nError: {e}\n")
         return
@@ -33,6 +34,7 @@ def main():
     # print(f"Profit per trade: {instance.profit}")
     # print(f"Cumulative profit: {instance.cumulative_profit}")
 
+    instance.analyze_trades()
     instance.plot_chart()
     instance.log_trades(log_file)
 

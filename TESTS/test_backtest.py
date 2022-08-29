@@ -18,17 +18,7 @@ def test_backtest_init_valid():
     assert instance.data == None
 
 
-def test_price_data_columns_exist():
-    instance = Backtest()
-    instance.download_prices()
-
-    index_name = "Date"
-    columns_names = ["Open", "Close", "High", "Low", "Volume"]
-    assert instance.data.index.name == index_name
-    assert instance.data.columns.all() in columns_names
-
-
-def test_Backtest_stores_only_first_symbol():
+def test_Backtest_symbol_stores_only_first_value():
     instance = Backtest("TSLA MSFT")
     assert instance.symbol == "TSLA"
     instance = Backtest("TSLA,MSFT")
@@ -37,7 +27,17 @@ def test_Backtest_stores_only_first_symbol():
     assert instance.symbol == "TSLA"
 
 
-def test_price_data_has_prices_downloaded():
+def test_Backtest_data_check_prices_column_structure():
+    instance = Backtest()
+    instance.download_prices()
+
+    index_name = "Date"
+    columns_names = ["Open", "Close", "High", "Low", "Volume"]
+    assert instance.data.index.name == index_name
+    assert instance.data.columns.all() in columns_names
+    
+
+def test_Backtest_data_prices_data_has_downloaded_values():
     instance = Backtest("TSLA MSFT")
     instance.download_prices()
     assert len(instance.data) > 0

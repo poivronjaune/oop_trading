@@ -53,6 +53,7 @@ def test_if_calc_indicators_added_some_new_columns():
         valid_columns = valid_columns & (c in instance.df.columns.tolist())
     assert valid_columns
 
+
 def test_calculate_relative_profits_without_open_positions():
     # Open position means there is one more buy (instance.buy_arr) than sells (instance.sell_arr)
     instance = Backtest()
@@ -61,7 +62,8 @@ def test_calculate_relative_profits_without_open_positions():
         profits = instance.calculate_relative_profits()
     assert len(profits) == len(instance.buy_arr)
 
-#def test_calculate_relative_profits_with_open_positions():
+
+# def test_calculate_relative_profits_with_open_positions():
 #    # Open position means there is one more buy (instance.buy_arr) than sells (instance.sell_arr)
 #    instance = Backtest()
 #    instance.run_trades()

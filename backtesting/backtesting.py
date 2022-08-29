@@ -5,6 +5,7 @@ import numpy as np
 import ta
 import matplotlib.pyplot as plt
 
+
 class Backtest:
     def __init__(self, symbol=None):
         self.symbol = symbol
@@ -68,13 +69,11 @@ class Backtest:
         return (self.sell_arr.values - self.buy_arr.values) / self.buy_arr.values
 
     def analyze_trades(self):
-        
+
         self.calculate_relative_profits()
-        #self.profit = self.calc_profit()
-        #self.max_drawdown = self.profit.min()
-        #self.cumulative_profit = (self.profit + 1).prod() - 1
-
-
+        # self.profit = self.calc_profit()
+        # self.max_drawdown = self.profit.min()
+        # self.cumulative_profit = (self.profit + 1).prod() - 1
 
     def plot_chart(self):
         plt.figure(figsize=(10, 5))

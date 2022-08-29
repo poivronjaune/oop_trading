@@ -18,9 +18,9 @@ class Backtest:
         self.calc_indicators()
         self.generate_signals()
         self.run_trades()
+        self.analyze_trades()
+
         self.profit = self.calc_profit()
-        self.max_drawdown = self.profit.min()
-        self.cumulative_profit = (self.profit + 1).prod() - 1
 
     def calc_indicators(self):
         self.df['ma_20']    = self.df.Close.rolling(20).mean()
@@ -92,4 +92,7 @@ class Backtest:
 
         trades_df.to_csv(f"{os.path.join(path_str,file_name)}", index=False)
         
+    def analyze_trades(self):
+        self.max_drawdown = self.profit.min()
+        self.cumulative_profit = (self.profit + 1).prod() - 1
             

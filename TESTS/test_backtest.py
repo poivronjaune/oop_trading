@@ -19,13 +19,14 @@ def test_Backtest__init__valid():
 
 
 class TestBacktestSymbols:
-    def test_Backtest_symbol_stores_only_first_value(self):
-        instance = Backtest("TSLA MSFT")
+    @pytest.mark.parametrize("symbol", ["TSLA", "TSLA MSFT", "TSLA,MSFT", ["TSLA", "MSFT"]])
+    def test_Backtest_symbol_stores_only_first_value(self, symbol):
+        instance = Backtest(symbol)
         assert instance.symbol == "TSLA"
-        instance = Backtest("TSLA,MSFT")
-        assert instance.symbol == "TSLA"
-        instance = Backtest(["TSLA", "MSFT"])
-        assert instance.symbol == "TSLA"
+        # instance = Backtest("TSLA,MSFT")
+        # assert instance.symbol == "TSLA"
+        # instance = Backtest(["TSLA", "MSFT"])
+        # assert instance.symbol == "TSLA"
 
     def test_Backtest_if_symbol_empty_store_default_value(self):
         with pytest.raises(ValueError):

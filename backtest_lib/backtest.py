@@ -3,8 +3,23 @@ from dateutil import parser
 import yfinance as yf
 
 
+# UTILITY FUNCTION
+def _extract_date(date_param):
+    try:
+        date_val = parser.parse(date_param)
+    except Exception:
+        date_val = None
+
+    if isinstance(date_param, datetime):
+        date_val = date_param
+
+    return date_val
+
+
 class Backtest:
     DEFAULT_SYMBOL = "AAPL"
+    DEFAULT_START_DATE = datetime(2018, 1, 1)
+    DEFAULT_END_DATE = datetime.now()
 
     def __init__(self, symbol=None):
         if symbol == None:
@@ -12,9 +27,8 @@ class Backtest:
         else:
             self.symbol = symbol
 
-        # self.start_date = datetime(2018, 1, 1)
-        self.start_date = "2018-1-1"
-        self.end_date = datetime.now()
+        self._end_date = Backtest.DEFAULT_END_DATE
+        self._start_date = Backtest.DEFAULT_START_DATE
         self.data = None
 
     @property
@@ -41,16 +55,25 @@ class Backtest:
 
     @start_date.setter
     def start_date(self, date_param):
-        date_val = None
-        if isinstance(date_param, str):
-            # date_val = datetime(datetime.strptime('Jun 1 2005  1:33PM', '%Y/%m/%d %I:%M'))
-            date_val = parser.parse(date_param)
-            
-        
-        if date_val is not None:
+        date_val = _extract_date(date_param)
+
+        if (date_val is not None) and (date_val < self.end_date):
             self._start_date = date_val
         else:
-            raise ValueError('Invalid date.')
+            raise ValueError("Invalid date or start_date > end_date.")
+
+    @property
+    def end_date(self):
+        return self._end_date
+
+    @end_date.setter
+    def end_date(self, date_param):
+        date_val = _extract_date(date_param)
+
+        if (date_val is not None) and (date_val > self.start_date):
+            self._end_date = date_val
+        else:
+            raise ValueError("Invalid date or end_date < start_date.")
 
     def download_prices(self):
         data = yf.download(self.symbol, self.start_date, self.end_date)

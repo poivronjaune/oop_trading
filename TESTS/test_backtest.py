@@ -4,12 +4,11 @@ import pytest
 from backtest_lib.backtest import Backtest
 
 
-def test_always_True():
+def test_always_True_to_establish_pytest_works():
     assert True
 
 
-def test_Backtest__init__valid():
-    # Make sure defaults are set at class creation
+def test_Backtest_valid_default_values_created_on_init():
     instance = Backtest()
     assert instance is not None
     assert instance.symbol == Backtest.DEFAULT_SYMBOL
@@ -18,24 +17,22 @@ def test_Backtest__init__valid():
     assert instance.data == None
 
 
+<<<<<<< HEAD
 class TestBacktestSymbols:
+=======
+class TestBacktestForPriceDataDownloads:
+>>>>>>> 295d37c4203be0d07b6d24d377920fc8f9fd1376
     @pytest.mark.parametrize(
         "symbol", ["TSLA", "TSLA MSFT", "TSLA,MSFT", ["TSLA", "MSFT"]]
     )
     def test_Backtest_symbol_stores_only_first_value(self, symbol):
         instance = Backtest(symbol)
         assert instance.symbol == "TSLA"
-        # instance = Backtest("TSLA,MSFT")
-        # assert instance.symbol == "TSLA"
-        # instance = Backtest(["TSLA", "MSFT"])
-        # assert instance.symbol == "TSLA"
 
     def test_Backtest_if_symbol_empty_store_default_value(self):
         with pytest.raises(ValueError):
             instance = Backtest(" ")
 
-
-class TestBacktestStartDate:
     def test_start_date_set_from_a_string(self):
         instance = Backtest()
         instance.start_date = "2020-01-23"
@@ -59,16 +56,12 @@ class TestBacktestStartDate:
         with pytest.raises(ValueError):
             instance.start_date = "2022-01-01"
 
-
-class TestBacktestEndDate:
     def test_end_date_smaller_than_start_date(self):
         instance = Backtest()
         instance.start_date = "2022-01-01"
         with pytest.raises(ValueError):
             instance.end_date = "2020-01-01"
 
-
-class TestBacktest_Data:
     def test_Backtest_data_check_prices_column_structure(self):
         instance = Backtest()
         instance.download_prices()
@@ -89,3 +82,16 @@ class TestBacktest_Data:
         instance = Backtest(symbol)
         instance.download_prices()
         assert len(instance.data) > 0
+<<<<<<< HEAD
+=======
+
+
+class TestBacktestForIndicatorsImplementation:
+    def test_bidon_indicators(self):
+        pass
+
+
+class TestBacktestForBuySellSignals:
+    def test_bidon_dignals(self):
+        pass
+>>>>>>> 295d37c4203be0d07b6d24d377920fc8f9fd1376

@@ -5,6 +5,10 @@ yfinance
 matplotlib
 ta
 
+# Web scraping packages
+requests
+bs4
+
 # Testing and dev packages (can be moved to a specific test requirements file)
 pytest
 pytest-cov

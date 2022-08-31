@@ -19,7 +19,9 @@ def test_Backtest__init__valid():
 
 
 class TestBacktestSymbols:
-    @pytest.mark.parametrize("symbol", ["TSLA", "TSLA MSFT", "TSLA,MSFT", ["TSLA", "MSFT"]])
+    @pytest.mark.parametrize(
+        "symbol", ["TSLA", "TSLA MSFT", "TSLA,MSFT", ["TSLA", "MSFT"]]
+    )
     def test_Backtest_symbol_stores_only_first_value(self, symbol):
         instance = Backtest(symbol)
         assert instance.symbol == "TSLA"
@@ -87,5 +89,3 @@ class TestBacktest_Data:
         instance = Backtest(symbol)
         instance.download_prices()
         assert len(instance.data) > 0
-
-

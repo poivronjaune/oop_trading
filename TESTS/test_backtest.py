@@ -17,11 +17,7 @@ def test_Backtest_valid_default_values_created_on_init():
     assert instance.data == None
 
 
-<<<<<<< HEAD
-class TestBacktestSymbols:
-=======
 class TestBacktestForPriceDataDownloads:
->>>>>>> 295d37c4203be0d07b6d24d377920fc8f9fd1376
     @pytest.mark.parametrize(
         "symbol", ["TSLA", "TSLA MSFT", "TSLA,MSFT", ["TSLA", "MSFT"]]
     )
@@ -82,8 +78,6 @@ class TestBacktestForPriceDataDownloads:
         instance = Backtest(symbol)
         instance.download_prices()
         assert len(instance.data) > 0
-<<<<<<< HEAD
-=======
 
 
 class TestBacktestForIndicatorsImplementation:
@@ -94,4 +88,4 @@ class TestBacktestForIndicatorsImplementation:
 class TestBacktestForBuySellSignals:
     def test_bidon_dignals(self):
         pass
->>>>>>> 295d37c4203be0d07b6d24d377920fc8f9fd1376
+

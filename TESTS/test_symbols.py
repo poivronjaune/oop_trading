@@ -17,16 +17,22 @@ class TestSymbolsClass:
         instance = Symbols()
         instance.get_html_data_from_firstratedata_web_site()
         assert instance.html is not None
-        
+
     def test_extract_symbols_from_web_page_NO_WEBPAGE(self):
         instance = Symbols()
         instance.extract_symbols_from_web_page()
         assert instance.symbols_df is None
 
-    def test_extract_symbols_from_web_page(self):
+    # def test_extract_symbols_from_web_page(self):
+    #     instance = Symbols()
+    #     instance.get_html_data_from_firstratedata_web_site()
+    #     instance.extract_symbols_from_web_page()
+    #     assert instance.symbols_df is not None
+    #     assert isinstance(instance.symbols_df, pd.core.frame.DataFrame)
+    #     assert len(instance.symbols_df) > 0
+
+    def test_convert_strings_list_to_dataframe(self):
         instance = Symbols()
-        instance.get_html_data_from_firstratedata_web_site()
-        instance.extract_symbols_from_web_page()
-        assert instance.symbols_df is not None
-        assert isinstance(instance.symbols_df, pd.core.frame.DataFrame)
-        assert len(instance.symbols_df) > 0
+        str1 = ['AA (Alcoa Corporation) First Date:18-Oct-2016 -> Last Date:31-Aug-2022']
+        result = instance.__convert_strings_list_to_dataframe(str1)
+        assert result is not None

@@ -88,4 +88,3 @@ class TestBacktestClassForIndicatorsImplementation:
 class TestBacktestClassForBuySellSignals:
     def test_bidon_dignals(self):
         pass
-

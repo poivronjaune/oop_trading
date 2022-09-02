@@ -12,5 +12,6 @@ def test_if_all_packages_are_installed():
     import matplotlib
     import ta
     import bs4
+    import re
 
     assert True

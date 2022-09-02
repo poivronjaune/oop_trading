@@ -31,8 +31,3 @@ class TestSymbolsClass:
     #     assert isinstance(instance.symbols_df, pd.core.frame.DataFrame)
     #     assert len(instance.symbols_df) > 0
 
-    def test_convert_strings_list_to_dataframe(self):
-        instance = Symbols()
-        str1 = ['AA (Alcoa Corporation) First Date:18-Oct-2016 -> Last Date:31-Aug-2022']
-        result = instance.__convert_strings_list_to_dataframe(str1)
-        assert result is not None

@@ -1,5 +1,6 @@
 import re
 import requests
+import dateutil
 import pandas as pd
 from urllib import request
 from bs4 import BeautifulSoup, element
@@ -8,94 +9,66 @@ from bs4 import BeautifulSoup, element
 class Symbols:
     def __init__(self):
         self.html = None
-        self.symbols_df = self.__no_symbols_found()
+        self.source = "First Trade Data"
+        self.line_marker = "First Date:"
+        self.url = "https://firstratedata.com/b/22/stock-complete-historical-intraday"
+        self.symbols_df = self._no_symbols_found()
 
     def get_html_data_from_firstratedata_web_site(self):
-        self.source = "First Trade Data"
-        self.url = "https://firstratedata.com/b/22/stock-complete-historical-intraday"
         html = requests.get(self.url).text
-        if "First Date:" in html:
+        if self.line_marker in html:
             self.html = requests.get(self.url).text
         else:
             self.html = None
+            raise ValueError("Invalid web site.")
 
-    def extract_symbols_from_web_page(self):
+    def extract_symbol_lines_from_html_content(self):
         if self.html is None:
-            self.__no_symbols_found()
+            self._no_symbols_found()
             return
-
+        # This procedure is very sensitive to web site html layout
+        # our tag to parse is the third one from last page <div>
         bs4_soup = BeautifulSoup(self.html, "html.parser")
-        first_line_to_parse = self.__get_first_line_of_data_to_parse_from(bs4_soup)
-        if first_line_to_parse is None:
-            self.__no_symbols_found()
-            return
+        line = bs4_soup.find_all("div")
+        line[-3].find()
+        symbol_lines = []
+        for line_element in line[-3]:
+            if self.line_marker in line_element:
+                symbol_str = str(line_element.string).strip().replace("  ", " ")
+                symbol_lines.append(symbol_str)
+        if len(symbol_lines) <= 0:
+            symbol_lines = None
 
-        (
-            listed_symbols_as_strings,
-            delisted_symbols_as_strings,
-        ) = self.__extract_symbol_lines_as_strings(first_line_to_parse)
+        return symbol_lines
 
-        listed_df = self.__convert_strings_list_to_dataframe(listed_symbols_as_strings)
-
-        self.symbols_df = listed_df  # TODO: merge listed symbols and delisted symbols as one Dataframe
-
-    def __get_first_line_of_data_to_parse_from(self, bs4_soup):
-        try:
-            hrs_tags = bs4_soup.find_all("hr")
-            if isinstance(hrs_tags, element.ResultSet) and len(hrs_tags) > 0:
-                return hrs_tags[-1]
-            else:
-                return None
-        except:
-            return None
-
-    def __extract_symbol_lines_as_strings(self, lines_to_parse):
-        TEXT_MARKER = (
-            "First Date:"  # Text to detect a line with symbols info in the soup
-        )
-        symbols_listed = []
-        symbols_delisted = []
-        line_element = lines_to_parse
-        while line_element is not None:
-            try:
-                line_element = line_element.next
-                if TEXT_MARKER in line_element:
-                    symbol_str = str(line_element.string).strip().replace("  ", " ")
-                    if "-DESLISTED" in symbol_str:
-                        symbols_delisted.append(symbol_str.replace("-DELISTED", ""))
-                    else:
-                        symbols_listed.append(symbol_str)
-            except:
-                line_element = None
-
-        return symbols_listed, symbols_delisted
-
-    def __convert_strings_list_to_dataframe(self, symbols_str_list):
+    def convert_symbol_lines_to_dataframe(self, symbol_lines):
         # String format to convert: AA (Alcoa Corporation) First Date:18-Oct-2016 -> Last Date:31-Aug-2022
         # regx trick -> (?<=chars) start of matching string (lookbehind pattern not included in extraction)
         # regx trick -> (?=chars)  end of matching string   (lookahead pattern not included in extraction)
+        
+        if not isinstance(symbol_lines, list) or len(symbol_lines) <= 0:
+            self._no_symbols_found()
+            return
 
-        if not isinstance(symbols_str_list, list) or len(symbols_str_list) <= 0:
-            return None
+        regx_symbol_match     = re.compile(r".+(?= \()")
+        regx_name_match       = re.compile(r"(?<=\().*(?=\))")
+        regx_first_date_match = re.compile(r"(?<=First Date:).+(?= ->)")
+        regx_last_date_match  = re.compile(r"(?<=Last Date:).+")
 
-        regx_symbol = re.compile(r".+(?= \()")
-        regx_name = re.compile(r"(?<=\().+(?=\))")
-        regx_first = re.compile(r"(?<=First Date:).+(?= ->)")
-        regx_last = re.compile(r"(?<=Last Date:).+")
+        df = pd.DataFrame(columns=['Symbol','Name','ListedDt','LastDt','Status'])
+        for line in symbol_lines:
+            symbol = re.search(regx_symbol_match, line)
+            symbol = '' if symbol is None else symbol.group()
+            name = re.search(regx_name_match, line)
+            name = '' if name is None else name.group()
+            first_date = re.search(regx_first_date_match, line).group()
+            last_date = re.search(regx_last_date_match, line).group()   
+            status = 'Unkown' 
 
-        symbol = re.search(regx_symbol, symbols_str_list[0]).group()
-        name = re.search(regx_name, symbols_str_list[0]).group()
-        first_date = re.search(regx_first, symbols_str_list[0]).group()
-        last_date = re.search(regx_last, symbols_str_list[0]).group()
+            new_row = {'Symbol':symbol, 'Name':name, 'ListedDt':dateutil.parser.parse(first_date), 'LastDt':dateutil.parser.parse(last_date), 'Status':status}
+            df = df.append(new_row, ignore_index=True)  
+            
+        self.symbols_df = df
 
-        symbols_df = pd.DataFrame()
-        #new_df = pd.DataFrame([symbol, name, first_date, last_date])
-        #symbols_df.append(new_df, ignore_index=True)
-        symbols_df = pd.DataFrame(['one','two'])
-        if len(symbols_df) <= 0:
-            return None
-
-        return symbols_df
-
-    def __no_symbols_found(self):
+    def _no_symbols_found(self):
         self.symbols_df = None

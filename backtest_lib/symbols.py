@@ -63,11 +63,17 @@ class Symbols:
             name = '' if name is None else name.group()
             first_date = re.search(regx_first_date_match, line).group()
             last_date = re.search(regx_last_date_match, line).group()   
-            status = 'Unkown' 
+            status = 'Unknown' 
 
             new_row = {'Symbol':symbol, 'Name':name, 'ListedDt':dateutil.parser.parse(first_date), 'LastDt':dateutil.parser.parse(last_date), 'Status':status}
             df = df.append(new_row, ignore_index=True)  
             
+        self.symbols_df = df
+
+    def _update_symbols_listed_delisted_status(self):
+        df = self.symbols_df
+        df.loc[df.Symbol.str.contains('-DELISTED'), 'Status'] = 'Delisted'
+        df.loc[~df.Symbol.str.contains('-DELISTED'), 'Status'] = 'Active'
         self.symbols_df = df
 
     def _no_symbols_found(self):

@@ -1,9 +1,16 @@
 yfinance
-pandas
-numpy
+#pandas included in yfinance
+#numpy  included in yfinance
+
 matplotlib
 ta
-#TA_Lib-0.4.24-cp310-cp310-win_amd64.whl
 
+# Web scraping packages
+requests
+bs4
+
+# Testing and dev packages (can be moved to a specific test requirements file)
 pytest
-
+pytest-cov
+coverage
+black

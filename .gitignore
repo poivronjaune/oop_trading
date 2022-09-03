@@ -1,6 +1,11 @@
 # Custom project ignores
+log/
 LOG/
 .vscode/
+*_old.*
+inst*.*
+uninst.txt
+TDD_NOTES/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

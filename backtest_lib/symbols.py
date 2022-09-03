@@ -14,6 +14,12 @@ class Symbols:
         self.url = "https://firstratedata.com/b/22/stock-complete-historical-intraday"
         self.symbols_df = self._no_symbols_found()
 
+    def build_symbols_dataframe(self):
+        self.get_html_data_from_firstratedata_web_site()
+        lines = self.extract_symbol_lines_from_html_content()
+        self.convert_symbol_lines_to_dataframe(lines)
+        self._update_symbols_listed_delisted_status()
+
     def get_html_data_from_firstratedata_web_site(self):
         html = requests.get(self.url).text
         if self.line_marker in html:

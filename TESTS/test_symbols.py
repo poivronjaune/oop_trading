@@ -78,3 +78,10 @@ class TestSymbolsClass:
         status_values = instance.symbols_df.Status.tolist()
         assert "Unknown" not in status_values
 
+    def test_build_symbols_dataframe(self):
+        instance = Symbols()
+        instance.build_symbols_dataframe()
+        assert instance.symbols_df is not None
+        assert isinstance(instance.symbols_df, pd.DataFrame)
+        assert "unknown" not in instance.symbols_df.Status.tolist()
+

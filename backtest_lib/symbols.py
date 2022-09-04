@@ -85,3 +85,5 @@ class Symbols:
 
     def _no_symbols_found(self):
         self.symbols_df = None
+
+    

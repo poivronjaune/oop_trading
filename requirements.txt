@@ -1,13 +1,15 @@
 yfinance
 #pandas included in yfinance
 #numpy  included in yfinance
-
 matplotlib
 ta
 
 # Web scraping packages
 requests
 bs4
+
+# Databases
+sqlalchemy
 
 # Testing and dev packages (can be moved to a specific test requirements file)
 pytest

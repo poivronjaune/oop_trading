@@ -6,6 +6,7 @@ LOG/
 inst*.*
 uninst.txt
 TDD_NOTES/
+tmp/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -4,8 +4,10 @@ import dateutil
 import pandas as pd
 from urllib import request
 from bs4 import BeautifulSoup, element
+import sqlalchemy
 
 # NEW COMMENT
+
 
 class Symbols:
     def __init__(self):
@@ -14,6 +16,8 @@ class Symbols:
         self.line_marker = "First Date:"
         self.url = "https://firstratedata.com/b/22/stock-complete-historical-intraday"
         self.symbols_df = self._no_symbols_found()
+
+        self.db_name = 'symbols.db'
 
     def build_symbols_dataframe(self):
         self.get_html_data_from_firstratedata_web_site()
@@ -52,38 +56,52 @@ class Symbols:
         # String format to convert: AA (Alcoa Corporation) First Date:18-Oct-2016 -> Last Date:31-Aug-2022
         # regx trick -> (?<=chars) start of matching string (lookbehind pattern not included in extraction)
         # regx trick -> (?=chars)  end of matching string   (lookahead pattern not included in extraction)
-        
+
         if not isinstance(symbol_lines, list) or len(symbol_lines) <= 0:
             self._no_symbols_found()
             return
 
-        regx_symbol_match     = re.compile(r".+(?= \()")
-        regx_name_match       = re.compile(r"(?<=\().*(?=\))")
+        regx_symbol_match = re.compile(r".+(?= \()")
+        regx_name_match = re.compile(r"(?<=\().*(?=\))")
         regx_first_date_match = re.compile(r"(?<=First Date:).+(?= ->)")
-        regx_last_date_match  = re.compile(r"(?<=Last Date:).+")
+        regx_last_date_match = re.compile(r"(?<=Last Date:).+")
 
-        df = pd.DataFrame(columns=['Symbol','Name','ListedDt','LastDt','Status'])
+        df = pd.DataFrame(columns=["Symbol", "Name", "ListedDt", "LastDt", "Status"])
         for line in symbol_lines:
             symbol = re.search(regx_symbol_match, line)
-            symbol = '' if symbol is None else symbol.group()
+            symbol = "" if symbol is None else symbol.group()
             name = re.search(regx_name_match, line)
-            name = '' if name is None else name.group()
+            name = "" if name is None else name.group()
             first_date = re.search(regx_first_date_match, line).group()
-            last_date = re.search(regx_last_date_match, line).group()   
-            status = 'Unknown' 
+            last_date = re.search(regx_last_date_match, line).group()
+            status = "Unknown"
 
-            new_row = {'Symbol':symbol, 'Name':name, 'ListedDt':dateutil.parser.parse(first_date), 'LastDt':dateutil.parser.parse(last_date), 'Status':status}
-            df = df.append(new_row, ignore_index=True)  
-            
+            new_row = {
+                "Symbol": symbol,
+                "Name": name,
+                "ListedDt": dateutil.parser.parse(first_date),
+                "LastDt": dateutil.parser.parse(last_date),
+                "Status": status,
+            }
+            df = df.append(new_row, ignore_index=True)
+
         self.symbols_df = df
 
     def _update_symbols_listed_delisted_status(self):
         df = self.symbols_df
-        df.loc[df.Symbol.str.contains('-DELISTED'), 'Status'] = 'Delisted'
-        df.loc[~df.Symbol.str.contains('-DELISTED'), 'Status'] = 'Active'
+        df.loc[df.Symbol.str.contains("-DELISTED"), "Status"] = "Delisted"
+        df.loc[~df.Symbol.str.contains("-DELISTED"), "Status"] = "Active"
         self.symbols_df = df
 
     def _no_symbols_found(self):
         self.symbols_df = None
 
-    
+    def save_symbols_to_db(self, db=None):
+        if db is None:
+            db_name = self.db_name
+        else:
+            db_name = db
+        
+        if self.symbols_df is not None and len(self.symbols_df) > 0:
+            engine = sqlalchemy.create_engine(f'sqlite:///{db_name}')
+            self.symbols_df.to_sql(db_name, engine)

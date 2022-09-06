@@ -1,3 +1,4 @@
+import os
 from modulefinder import Module
 from msilib.schema import Class
 import pytest
@@ -7,6 +8,9 @@ from backtest_lib.symbols import Symbols
 
 
 class TestSymbolsClass:
+    #
+    # Test functions to extract data from web site
+    #
     def test_Symbols_valid_instance(self):
         instance = Symbols()
         assert instance is not None
@@ -80,9 +84,21 @@ class TestSymbolsClass:
         instance.extract_symbol_lines_from_html_content()
         assert instance.symbols_df is None
 
-
     def test_convert_symbol_lines_to_dataframe_bad_list(self):
         instance = Symbols()
         symbol_lines = "not a list type"
         instance.convert_symbol_lines_to_dataframe(symbol_lines)
         assert instance.symbols_df is None
+
+    #
+    # Test functions for Databases
+    #
+    def test_save_symbols_to_db(self):
+        instance = Symbols()
+        instance.build_symbols_dataframe()
+        if not os.path.exists('tmp'):
+            os.mkdir('tmp')
+        tmp_db ='tmp\symbols1.db'
+        instance.save_symbols_to_db(tmp_db)
+        assert os.path.exists(tmp_db)
+        

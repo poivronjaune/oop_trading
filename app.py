@@ -1,6 +1,6 @@
 import sys
 
-from backtesting.backtesting import Backtest
+from backtest_lib.backtest import Backtest
 
 
 def argv_parse():

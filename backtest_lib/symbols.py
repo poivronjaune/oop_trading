@@ -1,3 +1,4 @@
+import os
 import re
 import requests
 import dateutil
@@ -5,9 +6,6 @@ import pandas as pd
 from urllib import request
 from bs4 import BeautifulSoup, element
 import sqlalchemy
-
-# NEW COMMENT
-
 
 class Symbols:
     def __init__(self):
@@ -97,11 +95,26 @@ class Symbols:
         self.symbols_df = None
 
     def save_symbols_to_db(self, db=None):
+        # Saves or updates database
         if db is None:
             db_name = self.db_name
         else:
             db_name = db
-        
-        if self.symbols_df is not None and len(self.symbols_df) > 0:
-            engine = sqlalchemy.create_engine(f'sqlite:///{db_name}')
-            self.symbols_df.to_sql(db_name, engine)
+
+        if os.path.exists(db):
+            self.update_symbols_db(db)
+        else:
+            if self.symbols_df is not None and len(self.symbols_df) > 0:
+                engine = sqlalchemy.create_engine(f'sqlite:///{db_name}')
+                self.symbols_df.to_sql(db_name, engine)
+    
+    def update_symbols_db(self, db=None):
+        if self.symbols_df is None:
+            return
+
+        if os.path.exists(db):
+            engine = sqlalchemy.create_engine(f'sqlite:///{db}')
+            for symbol in self.symbols_df:
+                pass
+        else:
+            raise ValueError('No DB found or Bad DB to update')

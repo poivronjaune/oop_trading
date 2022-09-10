@@ -75,13 +75,14 @@ class Symbols:
             status = "Unknown"
 
             new_row = {
-                "Symbol": symbol,
-                "Name": name,
-                "ListedDt": dateutil.parser.parse(first_date),
-                "LastDt": dateutil.parser.parse(last_date),
-                "Status": status,
+                "Symbol": [symbol],
+                "Name": [name],
+                "ListedDt": [dateutil.parser.parse(first_date)],
+                "LastDt": [dateutil.parser.parse(last_date)],
+                "Status": [status]
             }
-            df = df.append(new_row, ignore_index=True)
+            new_row_df = pd.DataFrame(new_row)
+            df = pd.concat([df, new_row_df])
 
         self.symbols_df = df
 

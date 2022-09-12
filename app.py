@@ -1,9 +1,11 @@
+""" Backtesting app for stock marketpartofolio automation """
 import sys
 
 from backtest_lib.backtest import Backtest
 
 
 def argv_parse():
+    """Command line options: [1] symbol, [2] log file name"""
     if len(sys.argv) > 1:
         symbol = sys.argv[1]
     else:
@@ -18,25 +20,14 @@ def argv_parse():
 
 
 def main():
+    """Get price data, analyse trades, print chart and produce log file"""
     symbol, log_file = argv_parse()
     try:
         instance = Backtest(symbol)
-        instance.run_trades()
-    except Exception as e:
-        print(f"\nError: {e}\n")
+    except RuntimeError as error_details:
+        # AttributeError, RuntimeError
+        print(f"\nError: {error_details}\n")
         return
-
-    # print(f"Symbol: {instance.symbol}")
-    print(f"Prices: {instance.df}")
-    print(f"DF Columns: {instance.df.columns.tolist()}")
-    # print(f"Buy prices: {instance.buy_arr}")
-    # print(f"Sell prices: {instance.sell_arr}")
-    # print(f"Profit per trade: {instance.profit}")
-    # print(f"Cumulative profit: {instance.cumulative_profit}")
-
-    instance.analyze_trades()
-    instance.plot_chart()
-    instance.log_trades(log_file)
 
 
 if __name__ == "__main__":

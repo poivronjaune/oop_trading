@@ -10,12 +10,14 @@ bs4
 
 # Databases
 sqlalchemy
+psycopg2
 
 # Testing and dev packages (can be moved to a specific test requirements file)
 pytest
 pytest-cov
 coverage
 black
+
 
 #Jupyter shit
 ipykernel 

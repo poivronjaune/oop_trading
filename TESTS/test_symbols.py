@@ -13,27 +13,27 @@ class TestSymbolsClass:
     # Test functions to extract data from web site
     #
     symbols_data = [
-    {
-        'Symbol':'A',
-        'Name':'Agilent Technologies Inc', 
-        'ListedDt':datetime.datetime(2005,1,3), 
-        'LastDt':datetime.datetime(2022,9,6),
-        'Status':'Active'
-    },
-    {
-        'Symbol':'AA',
-        'Name':'Alcoa Corporation', 
-        'ListedDt':datetime.datetime(2016,10,18), 
-        'LastDt':datetime.datetime(2022,9,6),
-        'Status':'Active'
-    },         
-    {
-        'Symbol':'ZGNX',
-        'Name':'Zogenix', 
-        'ListedDt':datetime.datetime(2010,11,23), 
-        'LastDt':datetime.datetime(2022,3,4),
-        'Status':'Active'
-    }
+        {
+            "Symbol": "A",
+            "Name": "Agilent Technologies Inc",
+            "ListedDt": datetime.datetime(2005, 1, 3),
+            "LastDt": datetime.datetime(2022, 9, 6),
+            "Status": "Active",
+        },
+        {
+            "Symbol": "AA",
+            "Name": "Alcoa Corporation",
+            "ListedDt": datetime.datetime(2016, 10, 18),
+            "LastDt": datetime.datetime(2022, 9, 6),
+            "Status": "Active",
+        },
+        {
+            "Symbol": "ZGNX",
+            "Name": "Zogenix",
+            "ListedDt": datetime.datetime(2010, 11, 23),
+            "LastDt": datetime.datetime(2022, 3, 4),
+            "Status": "Active",
+        },
     ]
 
     def test_Symbols_valid_instance(self):
@@ -72,7 +72,13 @@ class TestSymbolsClass:
         instance.convert_symbol_lines_to_dataframe(symbol_lines)
         instance._update_symbols_listed_delisted_status()
         status_values = instance.symbols_df.Status.tolist()
+        bad_symbols = [
+            symbol
+            for symbol in instance.symbols_df.Symbol.tolist()
+            if "-DELISTED" in symbol
+        ]
         assert "Unknown" not in status_values
+        assert len(bad_symbols) == 0
 
     def test_build_symbols_dataframe(self):
         instance = Symbols()
@@ -122,36 +128,39 @@ class TestSymbolsClass:
         instance = Symbols()
         data = TestSymbolsClass.symbols_data
         instance.symbols_df = pd.DataFrame(data)
-        if not os.path.exists('tmp'):
-            os.mkdir('tmp')
-        tmp_db ='tmp\symbols.db'
+        if not os.path.exists("tmp"):
+            os.mkdir("tmp")
+        tmp_db = r"tmp\symbols.db"
         instance.save_symbols_to_db(tmp_db)
         assert os.path.exists(tmp_db)
 
     def test_update_symbols_db_no_data(self):
         instance = Symbols()
-        instance.update_symbols_db(db='tmp/empty.db')
-        assert not os.path.exists('tmp/empty.db')
+        instance.update_symbols_db(db=r"tmp\empty.db")
+        assert not os.path.exists(r"tmp\empty.db")
 
     def test_update_symbols_db(self):
         # Must have run test_save_symbols_to_db() prior to this test
         data = TestSymbolsClass.symbols_data
-        new_row = pd.DataFrame([{
-          'Symbol':'AAIC',
-          'Name':'Arlington Asset Investment Class A', 
-          'ListedDt':datetime.datetime(2009,6,10), 
-          'LastDt':datetime.datetime(2022,9,6),
-          'Status':'Active'
-        }])
+        new_row = pd.DataFrame(
+            [
+                {
+                    "Symbol": "AAIC",
+                    "Name": "Arlington Asset Investment Class A",
+                    "ListedDt": datetime.datetime(2009, 6, 10),
+                    "LastDt": datetime.datetime(2022, 9, 6),
+                    "Status": "Active",
+                }
+            ]
+        )
         data_df = pd.concat([pd.DataFrame(data), new_row])
         instance = Symbols()
         instance.symbols_df = data_df
-        instance.update_symbols_db('tmp\symbols.db')
-
+        instance.update_symbols_db(r"tmp\symbols.db")
 
     def test_update_symbols_db_no_file_exists(self):
         data_df = pd.DataFrame(TestSymbolsClass.symbols_data)
         instance = Symbols()
         instance.symbols_df = data_df
         with pytest.raises(ValueError):
-            instance.update_symbols_db('tmp\non_existant.db')  
+            instance.update_symbols_db(r"tmp\non_existant.db")

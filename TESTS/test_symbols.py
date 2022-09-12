@@ -16,22 +16,22 @@ class TestSymbolsClass:
         {
             "Symbol": "A",
             "Name": "Agilent Technologies Inc",
-            "ListedDt": datetime.datetime(2005, 1, 3),
-            "LastDt": datetime.datetime(2022, 9, 6),
+            "ListedDt": datetime.datetime(2005, 1, 3).isoformat(),
+            "LastDt": datetime.datetime(2022, 9, 6).isoformat(),
             "Status": "Active",
         },
         {
             "Symbol": "AA",
             "Name": "Alcoa Corporation",
-            "ListedDt": datetime.datetime(2016, 10, 18),
-            "LastDt": datetime.datetime(2022, 9, 6),
+            "ListedDt": datetime.datetime(2016, 10, 18).isoformat(),
+            "LastDt": datetime.datetime(2022, 9, 6).isoformat(),
             "Status": "Active",
         },
         {
             "Symbol": "ZGNX",
             "Name": "Zogenix",
-            "ListedDt": datetime.datetime(2010, 11, 23),
-            "LastDt": datetime.datetime(2022, 3, 4),
+            "ListedDt": datetime.datetime(2010, 11, 23).isoformat(),
+            "LastDt": datetime.datetime(2022, 3, 4).isoformat(),
             "Status": "Active",
         },
     ]
@@ -124,6 +124,13 @@ class TestSymbolsClass:
     #
     # Test functions for Databases
     #
+    def test_real_save(self):
+        instance = Symbols()
+        instance.get_html_data_from_firstratedata_web_site()
+        instance.build_symbols_dataframe()
+        instance.save_symbols_to_db('tmp/real.db')
+        assert os.path.exists('tmp/real.db')
+
     def test_save_symbols_to_db(self):
         instance = Symbols()
         data = TestSymbolsClass.symbols_data
@@ -139,28 +146,26 @@ class TestSymbolsClass:
         instance.update_symbols_db(db=r"tmp\empty.db")
         assert not os.path.exists(r"tmp\empty.db")
 
-    def test_update_symbols_db(self):
+    def test_update_valid_symbols_db(self):
         # Must have run test_save_symbols_to_db() prior to this test
-        data = TestSymbolsClass.symbols_data
+        #data = TestSymbolsClass.symbols_data
+        instance = Symbols()
+        instance.get_html_data_from_firstratedata_web_site()
+        instance.build_symbols_dataframe()
+
+        data = instance.symbols_df
         new_row = pd.DataFrame(
             [
                 {
-                    "Symbol": "AAIC",
-                    "Name": "Arlington Asset Investment Class A",
-                    "ListedDt": datetime.datetime(2009, 6, 10),
-                    "LastDt": datetime.datetime(2022, 9, 6),
-                    "Status": "Active",
+                    "Symbol": "ZBID",
+                    "Name": "Bidon Added At The End",
+                    "ListedDt": datetime.datetime(2009, 6, 10).isoformat(),
+                    "LastDt": datetime.datetime(2022, 9, 6).isoformat(),
+                    "Status": "Test",
                 }
             ]
         )
-        data_df = pd.concat([pd.DataFrame(data), new_row])
+        data_df = pd.concat([pd.DataFrame(data), new_row], ignore_index=True)
         instance = Symbols()
         instance.symbols_df = data_df
         instance.update_symbols_db(r"tmp\symbols.db")
-
-    def test_update_symbols_db_no_file_exists(self):
-        data_df = pd.DataFrame(TestSymbolsClass.symbols_data)
-        instance = Symbols()
-        instance.symbols_df = data_df
-        with pytest.raises(ValueError):
-            instance.update_symbols_db(r"tmp\non_existant.db")

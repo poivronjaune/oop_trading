@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import re
 import requests
@@ -11,6 +12,7 @@ from bs4 import BeautifulSoup
 
 class Symbols:
     def __init__(self):
+        #sqlite3.register_converter("TIMESTAMP", datetime.fromisoformat)
         self.html = None
         self.source = "First Trade Data"
         self.line_marker = "First Date:"
@@ -18,6 +20,7 @@ class Symbols:
         self.symbols_df = self._no_symbols_found()
 
         self.db_name = "symbols.db"
+        self.symbols_table = "Symbols"
 
     def build_symbols_dataframe(self):
         self.get_html_data_from_firstratedata_web_site()
@@ -74,13 +77,14 @@ class Symbols:
             name = "" if name is None else name.group()
             first_date = re.search(regx_first_date_match, line).group()
             last_date = re.search(regx_last_date_match, line).group()
+            first_date_iso = dateutil.parser.parse(first_date).isoformat()
+            last_date_iso = dateutil.parser.parse(last_date).isoformat()
             status = "Unknown"
-
             new_row = {
                 "Symbol": [symbol],
                 "Name": [name],
-                "ListedDt": [dateutil.parser.parse(first_date)],
-                "LastDt": [dateutil.parser.parse(last_date)],
+                "ListedDt": [first_date_iso],
+                "LastDt": [last_date_iso],
                 "Status": [status],
             }
             new_row_df = pd.DataFrame(new_row)
@@ -109,23 +113,50 @@ class Symbols:
             self.update_symbols_db(db_name)
         else:
             if self.symbols_df is not None and len(self.symbols_df) > 0:
+                #engine = sqlite3.connect(f"{db_name}", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
                 engine = sqlite3.connect(f"{db_name}")
-                self.symbols_df.to_sql(db_name, engine, index=False)
+                self.symbols_df.to_sql(self.symbols_table, engine, index=False)
 
     def update_symbols_db(self, db=None):
         if self.symbols_df is None:
             return
 
+        print(" ")
+        for index, row in self.symbols_df.iterrows():
+            if (index == len(self.symbols_df) - 1) or (index == len(self.symbols_df) - 5):
+                s = row.Symbol
+                n = row.Name
+                d1 = row.ListedDt
+                d2 = row.LastDt
+                x = row.Status
+                #print(f"We loop: {index} ({s}[{type(s)}],{n}[{type(n)}],{d1}[{type(d1)}],{d2}[{type(d2)}],{x}[{type(x)}])")
+                continue
+        
+        return
+
         if os.path.exists(db):
-            engine = sqlite3.connect(f"{db}")
+            engine = sqlite3.connect(f"{db}" )
             c = engine.cursor()
-            for row in self.symbols_df:
-                print(row)
-                symbol = row.symbol
-                c.execute("SELECT * FROM 'symbols.db' WHERE Symbol = '{symbol}'")
+            for index, row in self.symbols_df.iterrows():
+                symbol = row.Symbol
+                print(f"From DF : {symbol}")
+                c.execute(f"SELECT * FROM '{self.symbols_table}' WHERE Symbol = '{symbol}'")
                 data = c.fetchone()
-                if data is not None:
-                    c.execute(f"UPDATE 'symbols.db' SET Name ='Temporary Name' WHERE Symbol = '{symbol}'")
+                if data is None:
+                    print(f"No data for: {symbol}")
+                else:
+                    print(f"From DATA : {data}")
+                    print(f"From DATA : {data[0]}")
+                    #updated_values = (row.Name.tolower(), row.ListedDt, row.LastDt, row.Symbol)
+                    updated_values = (row.Name.lower(), row.ListedDt, row.LastDt, row.Status, row.Symbol)
+                    c.execute(f'''
+                        UPDATE "{self.symbols_table}" 
+                        SET 
+                            Name = ?,
+                            ListedDt = ?,
+                            LastDt = ?,
+                            Status = ?
+                        WHERE Symbol = ? ''', updated_values)
                     engine.commit()
         else:
             raise ValueError("No DB found or Bad DB to update")
@@ -133,22 +164,5 @@ class Symbols:
 
 if __name__ == "__main__":
     print(f"Symbols app running....")
-    instance = Symbols()
-    instance.build_symbols_dataframe()
-    print(instance.symbols_df.tail(10))
-    
-
-    # instance.build_symbols_dataframe()
-    # print(f"{instance.symbols_df.tail(10)}")
-    # instance.save_symbols_to_db()
-
-    #engine = sqlite3.connect("symbols.db")
-    #c = engine.cursor()
-    ## c.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    #c.execute("SELECT * FROM 'symbols.db' WHERE symbol = 'AATCs'")
-    #row = c.fetchone()
-    #print(row)
-
-
 
     print(f"\nSymbols app terminated....")

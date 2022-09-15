@@ -124,12 +124,29 @@ class TestSymbolsClass:
     #
     # Test functions for Databases
     #
+    def test_create_valid_db_name(self):
+        instance = Symbols()
+        db_name = instance.create_valid_db_name()
+        assert db_name is not None
+
+    def test_create_db_engine(self):
+        instance = Symbols()
+        db_name = instance.create_valid_db_name('bidon.db')
+        engine = instance.create_db_engine(db_name)
+        assert engine is not None
+
     def test_real_save(self):
         instance = Symbols()
         instance.get_html_data_from_firstratedata_web_site()
         instance.build_symbols_dataframe()
-        instance.save_symbols_to_db('tmp/real.db')
-        assert os.path.exists('tmp/real.db')
+        instance.save_symbols_to_db(r'tmp\real.db')
+        assert os.path.exists(r'tmp\real.db')
+
+    def test_load_symbols_from_db(self):
+        instance = Symbols()
+        df = instance.load_symbols_from_db(r'tmp\real.db')
+        #assert df is not None
+        assert isinstance(df, pd.DataFrame)
 
     def test_save_symbols_to_db(self):
         instance = Symbols()

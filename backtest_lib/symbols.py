@@ -5,7 +5,7 @@ import requests
 import dateutil
 import pandas as pd
 
-import sqlite3
+from sqlalchemy import create_engine
 
 from bs4 import BeautifulSoup
 
@@ -20,7 +20,9 @@ class Symbols:
         self.symbols_df = self._no_symbols_found()
 
         self.db_name = "symbols.db"
+        self.db_columns = ['Symbol', 'Name', 'ListedDt', 'LastDt', 'Status']
         self.symbols_table = "Symbols"
+        self.engine = None
 
     def build_symbols_dataframe(self):
         self.get_html_data_from_firstratedata_web_site()
@@ -102,20 +104,46 @@ class Symbols:
     def _no_symbols_found(self):
         self.symbols_df = None
 
-    def save_symbols_to_db(self, db=None):
-        # Saves or updates database
+    def create_valid_db_name(self, db=None):
+        if db is None:
+            db_name = self.db_name
+        else:
+            db_name = db
+        return db_name
+
+    def create_db_engine(self, db=None):
         if db is None:
             db_name = self.db_name
         else:
             db_name = db
 
+        try: 
+            #engine = sqlite3.connect(f"{db_name}" )
+            engine = create_engine(f"sqlite:///{db_name}")
+            self.engine = engine
+        except Exception as e:
+            self.engine = None
+            raise ValueError('Unable to create Database Engine')
+
+    def load_symbols_from_db(self, db=None):
+        db_name = self.create_valid_db_name(db)
+        db_engine = self.create_db_engine(db_name)
+        if db_engine is not None:
+            symbols_df = pd.read_sql(self.symbols_table, self.engine, index_col=None)
+            return symbols_df
+        else:
+            return None
+
+    def save_symbols_to_db(self, db=None):
+        db_name = self.valid_db_name(db)
+
         if os.path.exists(db_name):
             self.update_symbols_db(db_name)
-        else:
-            if self.symbols_df is not None and len(self.symbols_df) > 0:
-                #engine = sqlite3.connect(f"{db_name}", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
-                engine = sqlite3.connect(f"{db_name}")
-                self.symbols_df.to_sql(self.symbols_table, engine, index=False)
+        #else:
+        #    if self.symbols_df is not None and len(self.symbols_df) > 0:
+        #        #engine = sqlite3.connect(f"{db_name}", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
+        #        engine = sqlite3.connect(f"{db_name}")
+        #        self.symbols_df.to_sql(self.symbols_table, engine, index=False)
 
     def update_symbols_db(self, db=None):
         if self.symbols_df is None:

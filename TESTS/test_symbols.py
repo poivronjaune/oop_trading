@@ -179,10 +179,12 @@ class TestSymbolsClass:
         instance = Symbols()
         df1 = pd.DataFrame(TestSymbolsClass.symbols_data)
         df2 = pd.DataFrame(TestSymbolsClass.new_symbols)
-        total_merged = len(df1) + len(df2)
+        merge_set = set()
+        merge_set.update(df1.Symbol)
+        merge_set.update(df2.Symbol)
         merge_df = instance.merge_stored_and_new_symbols(df1, df2)
         print(merge_df)
-        assert len(merge_df) == total_merged
+        assert len(merge_df) == len(merge_set)
 
     def test_db_update_stored_symbols(self, tmp_db_name):
         sym_df = pd.DataFrame(TestSymbolsClass.symbols_data)

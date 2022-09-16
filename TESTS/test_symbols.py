@@ -1,3 +1,5 @@
+import os
+import datetime
 from modulefinder import Module
 from msilib.schema import Class
 import pytest
@@ -7,6 +9,50 @@ from backtest_lib.symbols import Symbols
 
 
 class TestSymbolsClass:
+    #
+    # Test functions to extract data from web site
+    #
+    symbols_data = [
+        {
+            "Symbol": "A",
+            "Name": "Agilent Technologies Inc",
+            "ListedDt": datetime.datetime(2005, 1, 3).isoformat(),
+            "LastDt": datetime.datetime(2022, 9, 6).isoformat(),
+            "Status": "Active",
+        },
+        {
+            "Symbol": "AA",
+            "Name": "Alcoa Corporation",
+            "ListedDt": datetime.datetime(2016, 10, 18).isoformat(),
+            "LastDt": datetime.datetime(2022, 9, 6).isoformat(),
+            "Status": "Active",
+        },
+        {
+            "Symbol": "ZGNX",
+            "Name": "Zogenix",
+            "ListedDt": datetime.datetime(2010, 11, 23).isoformat(),
+            "LastDt": datetime.datetime(2022, 3, 4).isoformat(),
+            "Status": "Active",
+        }
+    ]
+
+    new_symbols = [
+        {
+            "Symbol": "ZBID",
+            "Name": "Bidon Added At The End",
+            "ListedDt": datetime.datetime(2009, 6, 10).isoformat(),
+            "LastDt": datetime.datetime(2022, 9, 6).isoformat(),
+            "Status": "Test",
+        },
+        {
+            "Symbol": "ZGNX",
+            "Name": "Updated Zogenix",
+            "ListedDt": datetime.datetime(2010, 11, 23).isoformat(),
+            "LastDt": datetime.datetime(2022, 3, 4).isoformat(),
+            "Status": "Test Update",
+        }           
+    ]
+
     def test_Symbols_valid_instance(self):
         instance = Symbols()
         assert instance is not None
@@ -43,7 +89,13 @@ class TestSymbolsClass:
         instance.convert_symbol_lines_to_dataframe(symbol_lines)
         instance._update_symbols_listed_delisted_status()
         status_values = instance.symbols_df.Status.tolist()
+        bad_symbols = [
+            symbol
+            for symbol in instance.symbols_df.Symbol.tolist()
+            if "-DELISTED" in symbol
+        ]
         assert "Unknown" not in status_values
+        assert len(bad_symbols) == 0
 
     def test_build_symbols_dataframe(self):
         instance = Symbols()
@@ -80,9 +132,68 @@ class TestSymbolsClass:
         instance.extract_symbol_lines_from_html_content()
         assert instance.symbols_df is None
 
-
     def test_convert_symbol_lines_to_dataframe_bad_list(self):
         instance = Symbols()
         symbol_lines = "not a list type"
         instance.convert_symbol_lines_to_dataframe(symbol_lines)
         assert instance.symbols_df is None
+
+    #
+    # Test functions for Databases
+    #
+    
+    @pytest.fixture()
+    def tmp_db_name(self):
+        tmp_path = 'tmp'
+        tmp_name = 'test2.sqlite'
+        if not os.path.exists(tmp_path):
+            os.mkdir(tmp_path)
+        fname = os. path. join(tmp_path, tmp_name)
+        return fname
+
+    def test_db_create_valid_db_name(self, tmp_db_name):
+        instance = Symbols()
+        db_name = instance.create_valid_db_name(tmp_db_name)
+        assert db_name is not None
+
+    def test_db_create_db_engine(self, tmp_db_name):
+        instance = Symbols()
+        db_name = instance.create_valid_db_name(tmp_db_name)
+        instance.create_db_engine(db_name)
+        assert instance.engine is not None
+
+    def test_db_save_symbols_to_db(self, tmp_db_name):
+        instance = Symbols()
+        sym_data = pd.DataFrame(TestSymbolsClass.symbols_data)
+        #instance.symbols_df = pd.DataFrame(data)
+        instance.save_symbols_to_db(data=sym_data, db=tmp_db_name)
+        assert os.path.exists(tmp_db_name)
+
+    def test_db_load_symbols_from_db(self, tmp_db_name):
+        instance = Symbols()
+        df = instance.load_symbols_from_db(db=tmp_db_name)
+        assert df is not None
+        assert isinstance(df, pd.DataFrame)
+
+    def test_db_merge_stored_and_new_symbols(self, tmp_db_name):
+        instance = Symbols()
+        df1 = pd.DataFrame(TestSymbolsClass.symbols_data)
+        df2 = pd.DataFrame(TestSymbolsClass.new_symbols)
+        total_merged = len(df1) + len(df2)
+        merge_df = instance.merge_stored_and_new_symbols(df1, df2)
+        print(merge_df)
+        assert len(merge_df) == total_merged
+
+    def test_db_update_stored_symbols(self, tmp_db_name):
+        sym_df = pd.DataFrame(TestSymbolsClass.symbols_data)
+        new_df = pd.DataFrame(TestSymbolsClass.new_symbols)
+        instance = Symbols()
+        instance.save_symbols_to_db(data=sym_df, db=tmp_db_name)
+        instance.update_symbols_and_save(data=new_df, db=tmp_db_name)
+        symbols_set = set()
+        symbols_set.update(sym_df.Symbol)
+        symbols_set.update(new_df.Symbol)
+        check_saved_data = instance.load_symbols_from_db(db=tmp_db_name)
+        assert len(symbols_set) == len(check_saved_data)
+        
+        

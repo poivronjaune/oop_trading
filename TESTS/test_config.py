@@ -1,6 +1,7 @@
 import os
 import pytest
 
+
 def test_if_LOG_folder_exists():
     assert os.path.exists("log\\")
 
@@ -15,4 +16,4 @@ def test_if_all_packages_are_installed():
     import bs4
     import sqlalchemy
 
-    assert True    
+    assert True

@@ -156,10 +156,22 @@ class TestSymbolsClass:
         db_name = instance.create_valid_db_name(tmp_db_name)
         assert db_name is not None
 
+    def test_db_no_param_create_valid_db_name(self, tmp_db_name):
+        instance = Symbols()
+        instance.db_name = tmp_db_name
+        db_name = instance.create_valid_db_name()
+        assert db_name is not None
+
     def test_db_create_db_engine(self, tmp_db_name):
         instance = Symbols()
         db_name = instance.create_valid_db_name(tmp_db_name)
         instance.create_db_engine(db_name)
+        assert instance.engine is not None
+
+    def test_db_no_param_create_db_engine(self, tmp_db_name):
+        instance = Symbols()
+        instance.db_name = tmp_db_name
+        instance.create_db_engine()
         assert instance.engine is not None
 
     def test_db_save_symbols_to_db(self, tmp_db_name):
@@ -168,6 +180,13 @@ class TestSymbolsClass:
         #instance.symbols_df = pd.DataFrame(data)
         instance.save_symbols_to_db(data=sym_data, db=tmp_db_name)
         assert os.path.exists(tmp_db_name)
+
+    def test_db_no_param_save_symbols_to_db(self, tmp_db_name):
+        instance = Symbols()
+        instance.symbols_df = pd.DataFrame(TestSymbolsClass.symbols_data)
+        instance.save_symbols_to_db(db=tmp_db_name) # No data param passed
+        assert os.path.exists(tmp_db_name)
+
 
     def test_db_load_symbols_from_db(self, tmp_db_name):
         instance = Symbols()
@@ -197,5 +216,3 @@ class TestSymbolsClass:
         symbols_set.update(new_df.Symbol)
         check_saved_data = instance.load_symbols_from_db(db=tmp_db_name)
         assert len(symbols_set) == len(check_saved_data)
-        
-        

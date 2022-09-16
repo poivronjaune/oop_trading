@@ -1,3 +1,4 @@
+# Single quotes are preferred '_' not "_"
 from datetime import datetime
 import os
 import re
@@ -162,11 +163,3 @@ class Symbols:
         else:
             data_to_save = data
         data_to_save.to_sql(self.symbols_table_name, self.engine, if_exists='replace', index=False)
-
-
-
-
-if __name__ == "__main__":
-    print(f"Symbols app running....")
-
-    print(f"\nSymbols app terminated....")

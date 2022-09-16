@@ -33,17 +33,24 @@ class TestSymbolsClass:
             "ListedDt": datetime.datetime(2010, 11, 23).isoformat(),
             "LastDt": datetime.datetime(2022, 3, 4).isoformat(),
             "Status": "Active",
-        },
+        }
     ]
 
-    new_symbol = [
+    new_symbols = [
         {
             "Symbol": "ZBID",
             "Name": "Bidon Added At The End",
             "ListedDt": datetime.datetime(2009, 6, 10).isoformat(),
             "LastDt": datetime.datetime(2022, 9, 6).isoformat(),
             "Status": "Test",
-        }
+        },
+        {
+            "Symbol": "ZGNX",
+            "Name": "Updated Zogenix",
+            "ListedDt": datetime.datetime(2010, 11, 23).isoformat(),
+            "LastDt": datetime.datetime(2022, 3, 4).isoformat(),
+            "Status": "Test Update",
+        }           
     ]
 
     def test_Symbols_valid_instance(self):
@@ -157,9 +164,9 @@ class TestSymbolsClass:
 
     def test_db_save_symbols_to_db(self, tmp_db_name):
         instance = Symbols()
-        data = TestSymbolsClass.symbols_data
-        instance.symbols_df = pd.DataFrame(data)
-        instance.save_symbols_to_db(data=instance.symbols_df, db=tmp_db_name)
+        sym_data = pd.DataFrame(TestSymbolsClass.symbols_data)
+        #instance.symbols_df = pd.DataFrame(data)
+        instance.save_symbols_to_db(data=sym_data, db=tmp_db_name)
         assert os.path.exists(tmp_db_name)
 
     def test_db_load_symbols_from_db(self, tmp_db_name):
@@ -171,16 +178,22 @@ class TestSymbolsClass:
     def test_db_merge_stored_and_new_symbols(self, tmp_db_name):
         instance = Symbols()
         df1 = pd.DataFrame(TestSymbolsClass.symbols_data)
-        df2 = pd.DataFrame(TestSymbolsClass.new_symbol)
+        df2 = pd.DataFrame(TestSymbolsClass.new_symbols)
         total_merged = len(df1) + len(df2)
         merge_df = instance.merge_stored_and_new_symbols(df1, df2)
         print(merge_df)
         assert len(merge_df) == total_merged
 
     def test_db_update_stored_symbols(self, tmp_db_name):
-        instance = Symbols()
         sym_df = pd.DataFrame(TestSymbolsClass.symbols_data)
-        new_df = pd.DataFrame(TestSymbolsClass.new_symbol)
+        new_df = pd.DataFrame(TestSymbolsClass.new_symbols)
+        instance = Symbols()
         instance.save_symbols_to_db(data=sym_df, db=tmp_db_name)
-        instance.symbols_df = new_df
-        instance.update_symbols_and_save(db=tmp_db_name)
+        instance.update_symbols_and_save(data=new_df, db=tmp_db_name)
+        symbols_set = set()
+        symbols_set.update(sym_df.Symbol)
+        symbols_set.update(new_df.Symbol)
+        check_saved_data = instance.load_symbols_from_db(db=tmp_db_name)
+        assert len(symbols_set) == len(check_saved_data)
+        
+        

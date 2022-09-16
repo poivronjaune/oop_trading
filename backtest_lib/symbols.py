@@ -12,17 +12,19 @@ from bs4 import BeautifulSoup
 
 class Symbols:
     def __init__(self):
-        #sqlite3.register_converter("TIMESTAMP", datetime.fromisoformat)
+        # Web scraping extraction parameters
         self.html = None
         self.source = "First Trade Data"
         self.line_marker = "First Date:"
         self.url = "https://firstratedata.com/b/22/stock-complete-historical-intraday"
         self.symbols_df = self._no_symbols_found()
 
+        # Database storage parametrs
         self.db_name = "symbols.sqlite"
         self.db_columns = ['Symbol', 'Name', 'ListedDt', 'LastDt', 'Status']
         self.symbols_table_name = "Symbols"
         self.engine = None
+
 
     def build_symbols_dataframe(self):
         self.get_html_data_from_firstratedata_web_site()
@@ -122,12 +124,6 @@ class Symbols:
         self.engine = engine
 
 
-    def save_symbols_to_db(self, data=None, db=None):
-        db_name = self.create_valid_db_name(db)
-        self.create_db_engine(db_name)
-        self.symbols_df.to_sql(self.symbols_table_name, self.engine, if_exists='replace', index=False)
-
-
     def load_symbols_from_db(self, db=None):
         db_name = self.create_valid_db_name(db)
         self.create_db_engine(db_name)
@@ -152,13 +148,22 @@ class Symbols:
         
         return updated_symbols
 
-    def update_symbols_and_save(self, db=None):
-        if self.symbols_df is not None:
+    def update_symbols_and_save(self, data, db=None):
+        if data is not None:
             stored_symbols = self.load_symbols_from_db(db)
-            print(stored_symbols)
-            updated_df = self.merge_stored_and_new_symbols(stored_symbols, self.symbols_df)
-            print(updated_df)
+            updated_df = self.merge_stored_and_new_symbols(stored_symbols, data)
             self.save_symbols_to_db(data=updated_df, db=db)
+
+    def save_symbols_to_db(self, data=None, db=None):
+        db_name = self.create_valid_db_name(db)
+        self.create_db_engine(db_name)
+        if data is None:
+            data_to_save = self.symbols_df
+        else:
+            data_to_save = data
+        data_to_save.to_sql(self.symbols_table_name, self.engine, if_exists='replace', index=False)
+
+
 
 
 if __name__ == "__main__":

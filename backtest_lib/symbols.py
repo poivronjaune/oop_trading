@@ -19,9 +19,9 @@ class Symbols:
         self.url = "https://firstratedata.com/b/22/stock-complete-historical-intraday"
         self.symbols_df = self._no_symbols_found()
 
-        self.db_name = "symbols.db"
+        self.db_name = "symbols.sqlite"
         self.db_columns = ['Symbol', 'Name', 'ListedDt', 'LastDt', 'Status']
-        self.symbols_table = "Symbols"
+        self.symbols_table_name = "Symbols"
         self.engine = None
 
     def build_symbols_dataframe(self):
@@ -104,6 +104,7 @@ class Symbols:
     def _no_symbols_found(self):
         self.symbols_df = None
 
+    # DATABASE Functions
     def create_valid_db_name(self, db=None):
         if db is None:
             db_name = self.db_name
@@ -117,77 +118,47 @@ class Symbols:
         else:
             db_name = db
 
-        try: 
-            #engine = sqlite3.connect(f"{db_name}" )
-            engine = create_engine(f"sqlite:///{db_name}")
-            self.engine = engine
-        except Exception as e:
-            self.engine = None
-            raise ValueError('Unable to create Database Engine')
+        engine = create_engine(f"sqlite:///{db_name}")
+        self.engine = engine
+
+
+    def save_symbols_to_db(self, data=None, db=None):
+        db_name = self.create_valid_db_name(db)
+        self.create_db_engine(db_name)
+        self.symbols_df.to_sql(self.symbols_table_name, self.engine, if_exists='replace', index=False)
+
 
     def load_symbols_from_db(self, db=None):
         db_name = self.create_valid_db_name(db)
-        db_engine = self.create_db_engine(db_name)
-        if db_engine is not None:
-            symbols_df = pd.read_sql(self.symbols_table, self.engine, index_col=None)
-            return symbols_df
-        else:
-            return None
+        self.create_db_engine(db_name)
+        stored_symbols = pd.read_sql(self.symbols_table_name, self.engine, index_col=None)
+        return stored_symbols
 
-    def save_symbols_to_db(self, db=None):
-        db_name = self.valid_db_name(db)
-
-        if os.path.exists(db_name):
-            self.update_symbols_db(db_name)
-        #else:
-        #    if self.symbols_df is not None and len(self.symbols_df) > 0:
-        #        #engine = sqlite3.connect(f"{db_name}", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
-        #        engine = sqlite3.connect(f"{db_name}")
-        #        self.symbols_df.to_sql(self.symbols_table, engine, index=False)
-
-    def update_symbols_db(self, db=None):
-        if self.symbols_df is None:
-            return
-
-        print(" ")
-        for index, row in self.symbols_df.iterrows():
-            if (index == len(self.symbols_df) - 1) or (index == len(self.symbols_df) - 5):
-                s = row.Symbol
-                n = row.Name
-                d1 = row.ListedDt
-                d2 = row.LastDt
-                x = row.Status
-                #print(f"We loop: {index} ({s}[{type(s)}],{n}[{type(n)}],{d1}[{type(d1)}],{d2}[{type(d2)}],{x}[{type(x)}])")
-                continue
+    def merge_stored_and_new_symbols(self, stored_df, new_df):
+        suffixe_new = '_new'
+        cols_old = stored_df.columns
+        cols_new = [f"{col}{suffixe_new}" for col in cols_old]
+        cols_new[0] = cols_old[0]
         
-        return
+        merged = pd.merge(stored_df, new_df, on='Symbol', how='outer', indicator=True, suffixes=['', '_new'])
 
-        if os.path.exists(db):
-            engine = sqlite3.connect(f"{db}" )
-            c = engine.cursor()
-            for index, row in self.symbols_df.iterrows():
-                symbol = row.Symbol
-                print(f"From DF : {symbol}")
-                c.execute(f"SELECT * FROM '{self.symbols_table}' WHERE Symbol = '{symbol}'")
-                data = c.fetchone()
-                if data is None:
-                    print(f"No data for: {symbol}")
-                else:
-                    print(f"From DATA : {data}")
-                    print(f"From DATA : {data[0]}")
-                    #updated_values = (row.Name.tolower(), row.ListedDt, row.LastDt, row.Symbol)
-                    updated_values = (row.Name.lower(), row.ListedDt, row.LastDt, row.Status, row.Symbol)
-                    c.execute(f'''
-                        UPDATE "{self.symbols_table}" 
-                        SET 
-                            Name = ?,
-                            ListedDt = ?,
-                            LastDt = ?,
-                            Status = ?
-                        WHERE Symbol = ? ''', updated_values)
-                    engine.commit()
-        else:
-            raise ValueError("No DB found or Bad DB to update")
+        old_df = merged.loc[merged._merge == 'left_only'][cols_old]
+        updates_df = merged.loc[merged._merge == 'both'][cols_new]
+        updates_df.columns = cols_old
+        new_sym_df = merged.loc[merged._merge == 'right_only'][cols_new]
+        new_sym_df.columns = cols_old        
+        
+        updated_symbols = pd.concat([old_df, updates_df, new_sym_df], ignore_index=True)
+        
+        return updated_symbols
+
+    def update_symbols_and_save(self, db=None):
+        if self.symbols_df is not None:
+            stored_symbols = self.load_symbols_from_db(db)
+            print(stored_symbols)
+            updated_df = self.merge_stored_and_new_symbols(stored_symbols, self.symbols_df)
+            print(updated_df)
+            self.save_symbols_to_db(data=updated_df, db=db)
 
 
 if __name__ == "__main__":

@@ -15,17 +15,16 @@ class Symbols:
     def __init__(self):
         # Web scraping extraction parameters
         self.html = None
-        self.source = "First Trade Data"
+        #self.source = "First Trade Data"
         self.line_marker = "First Date:"
         self.url = "https://firstratedata.com/b/22/stock-complete-historical-intraday"
         self.symbols_df = self._no_symbols_found()
 
         # Database storage parametrs
         self.db_name = "symbols.sqlite"
-        self.db_columns = ['Symbol', 'Name', 'ListedDt', 'LastDt', 'Status']
+        self.db_columns = ["Symbol", "Name", "ListedDt", "LastDt", "Status"]
         self.symbols_table_name = "Symbols"
-        self.engine = None
-
+        #self.engine = None
 
     def build_symbols_dataframe(self):
         self.get_html_data_from_firstratedata_web_site()
@@ -124,29 +123,37 @@ class Symbols:
         engine = create_engine(f"sqlite:///{db_name}")
         self.engine = engine
 
-
     def load_symbols_from_db(self, db=None):
         db_name = self.create_valid_db_name(db)
         self.create_db_engine(db_name)
-        stored_symbols = pd.read_sql(self.symbols_table_name, self.engine, index_col=None)
+        stored_symbols = pd.read_sql(
+            self.symbols_table_name, self.engine, index_col=None
+        )
         return stored_symbols
 
     def merge_stored_and_new_symbols(self, stored_df, new_df):
-        suffixe_new = '_new'
+        suffixe_new = "_new"
         cols_old = stored_df.columns
         cols_new = [f"{col}{suffixe_new}" for col in cols_old]
         cols_new[0] = cols_old[0]
-        
-        merged = pd.merge(stored_df, new_df, on='Symbol', how='outer', indicator=True, suffixes=['', '_new'])
 
-        old_df = merged.loc[merged._merge == 'left_only'][cols_old]
-        updates_df = merged.loc[merged._merge == 'both'][cols_new]
+        merged = pd.merge(
+            stored_df,
+            new_df,
+            on="Symbol",
+            how="outer",
+            indicator=True,
+            suffixes=["", "_new"],
+        )
+
+        old_df = merged.loc[merged._merge == "left_only"][cols_old]
+        updates_df = merged.loc[merged._merge == "both"][cols_new]
         updates_df.columns = cols_old
-        new_sym_df = merged.loc[merged._merge == 'right_only'][cols_new]
-        new_sym_df.columns = cols_old        
-        
+        new_sym_df = merged.loc[merged._merge == "right_only"][cols_new]
+        new_sym_df.columns = cols_old
+
         updated_symbols = pd.concat([old_df, updates_df, new_sym_df], ignore_index=True)
-        
+
         return updated_symbols
 
     def update_symbols_and_save(self, data, db=None):
@@ -162,4 +169,6 @@ class Symbols:
             data_to_save = self.symbols_df
         else:
             data_to_save = data
-        data_to_save.to_sql(self.symbols_table_name, self.engine, if_exists='replace', index=False)
+        data_to_save.to_sql(
+            self.symbols_table_name, self.engine, if_exists="replace", index=False
+        )

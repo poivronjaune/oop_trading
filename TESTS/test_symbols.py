@@ -33,7 +33,7 @@ class TestSymbolsClass:
             "ListedDt": datetime.datetime(2010, 11, 23).isoformat(),
             "LastDt": datetime.datetime(2022, 3, 4).isoformat(),
             "Status": "Active",
-        }
+        },
     ]
 
     new_symbols = [
@@ -50,7 +50,7 @@ class TestSymbolsClass:
             "ListedDt": datetime.datetime(2010, 11, 23).isoformat(),
             "LastDt": datetime.datetime(2022, 3, 4).isoformat(),
             "Status": "Test Update",
-        }           
+        },
     ]
 
     def test_Symbols_valid_instance(self):
@@ -141,14 +141,14 @@ class TestSymbolsClass:
     #
     # Test functions for Databases
     #
-    
+
     @pytest.fixture()
     def tmp_db_name(self):
-        tmp_path = 'tmp'
-        tmp_name = 'test2.sqlite'
+        tmp_path = "tmp"
+        tmp_name = "test2.sqlite"
         if not os.path.exists(tmp_path):
             os.mkdir(tmp_path)
-        fname = os. path. join(tmp_path, tmp_name)
+        fname = os.path.join(tmp_path, tmp_name)
         return fname
 
     def test_db_create_valid_db_name(self, tmp_db_name):
@@ -177,16 +177,14 @@ class TestSymbolsClass:
     def test_db_save_symbols_to_db(self, tmp_db_name):
         instance = Symbols()
         sym_data = pd.DataFrame(TestSymbolsClass.symbols_data)
-        #instance.symbols_df = pd.DataFrame(data)
         instance.save_symbols_to_db(data=sym_data, db=tmp_db_name)
         assert os.path.exists(tmp_db_name)
 
     def test_db_no_param_save_symbols_to_db(self, tmp_db_name):
         instance = Symbols()
         instance.symbols_df = pd.DataFrame(TestSymbolsClass.symbols_data)
-        instance.save_symbols_to_db(db=tmp_db_name) # No data param passed
+        instance.save_symbols_to_db(db=tmp_db_name)  # No data param passed
         assert os.path.exists(tmp_db_name)
-
 
     def test_db_load_symbols_from_db(self, tmp_db_name):
         instance = Symbols()

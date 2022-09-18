@@ -9,49 +9,56 @@ from sqlalchemy import create_engine
 
 from bs4 import BeautifulSoup
 
+LINE_MARKER = 'First Date:'
+URL = 'https://firstratedata.com/b/22/stock-complete-historical-intraday'
+DB_NAME = 'symbols.sqlite'
 
 class Symbols:
     def __init__(self):
-        #sqlite3.register_converter("TIMESTAMP", datetime.fromisoformat)
         self.html = None
-        self.source = "First Trade Data"
-        self.line_marker = "First Date:"
-        self.url = "https://firstratedata.com/b/22/stock-complete-historical-intraday"
+        #self.line_marker = "First Date:"
+        #self.url = "https://firstratedata.com/b/22/stock-complete-historical-intraday"
         self.symbols_df = self._no_symbols_found()
 
-        self.db_name = "symbols.sqlite"
+        #self.db_name = "symbols.sqlite"
         self.db_columns = ['Symbol', 'Name', 'ListedDt', 'LastDt', 'Status']
         self.symbols_table_name = "Symbols"
         self.engine = None
 
     def build_symbols_dataframe(self):
-        self.get_html_data_from_firstratedata_web_site()
+        self.get_html_containing_symbols_info()
         lines = self.extract_symbol_lines_from_html_content()
         self.convert_symbol_lines_to_dataframe(lines)
         self._update_symbols_listed_delisted_status()
+        
 
-    def get_html_data_from_firstratedata_web_site(self):
-        html = requests.get(self.url).text
-        if self.line_marker in html:
-            self.html = requests.get(self.url).text
-        else:
-            self.html = None
+    #def get_html_data_from_web_site(self, url=URL):
+    def get_html_containing_symbols_info(self, url=URL):
+        html = requests.get(url).text
+        self.html = None
+        if LINE_MARKER in html:
+            self.html = requests.get(url).text
+
+        if self.html is None:
             raise ValueError("Invalid web site.")
 
+    
     def extract_symbol_lines_from_html_content(self):
         if self.html is None:
             self._no_symbols_found()
             return
+        
         # This procedure is very sensitive to web site html layout
         # our tag to parse is the third one from last page <div>
         bs4_soup = BeautifulSoup(self.html, "html.parser")
-        line = bs4_soup.find_all("div")
-        line[-3].find()
+        div_elements_to_extract_from = bs4_soup.find_all("div")[-3]
+        print(f'div_elements_type: {type(div_elements_to_extract_from)}')
         symbol_lines = []
-        for line_element in line[-3]:
-            if self.line_marker in line_element:
+        for line_element in div_elements_to_extract_from:
+            if LINE_MARKER in line_element:
                 symbol_str = str(line_element.string).strip().replace("  ", " ")
                 symbol_lines.append(symbol_str)
+        
         if len(symbol_lines) <= 0:
             symbol_lines = None
 
@@ -78,9 +85,10 @@ class Symbols:
             name = re.search(regx_name_match, line)
             name = "" if name is None else name.group()
             first_date = re.search(regx_first_date_match, line).group()
-            last_date = re.search(regx_last_date_match, line).group()
             first_date_iso = dateutil.parser.parse(first_date).isoformat()
+            last_date = re.search(regx_last_date_match, line).group()
             last_date_iso = dateutil.parser.parse(last_date).isoformat()
+            
             status = "Unknown"
             new_row = {
                 "Symbol": [symbol],
@@ -106,32 +114,26 @@ class Symbols:
 
     # DATABASE Functions
     def create_valid_db_name(self, db=None):
-        if db is None:
-            db_name = self.db_name
-        else:
-            db_name = db
-        return db_name
+        return DB_NAME if db is None else db
 
     def create_db_engine(self, db=None):
-        if db is None:
-            db_name = self.db_name
-        else:
-            db_name = db
-
+        db_name = self.create_valid_db_name(db)
         engine = create_engine(f"sqlite:///{db_name}")
-        self.engine = engine
+        return engine
 
 
     def save_symbols_to_db(self, data=None, db=None):
-        db_name = self.create_valid_db_name(db)
-        self.create_db_engine(db_name)
-        self.symbols_df.to_sql(self.symbols_table_name, self.engine, if_exists='replace', index=False)
+        if data is None:
+            raise ValueError('No Dataframe to save.')
+        
+        engine = self.create_db_engine(db)
+        data.to_sql(self.symbols_table_name, engine, if_exists='replace', index=False)
 
 
     def load_symbols_from_db(self, db=None):
-        db_name = self.create_valid_db_name(db)
-        self.create_db_engine(db_name)
-        stored_symbols = pd.read_sql(self.symbols_table_name, self.engine, index_col=None)
+        #db_name = self.create_valid_db_name(db)
+        engine = self.create_db_engine(db)
+        stored_symbols = pd.read_sql(self.symbols_table_name, engine, index_col=None)
         return stored_symbols
 
     def merge_stored_and_new_symbols(self, stored_df, new_df):

@@ -1,4 +1,5 @@
 """ Backtesting app for stock marketpartofolio automation """
+import os
 import sys
 
 from backtest_lib.backtest import Backtest

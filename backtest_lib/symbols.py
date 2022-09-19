@@ -6,6 +6,7 @@ import datetime
 import dateutil
 import requests
 import pandas as pd
+import yfinance as yf
 from sqlalchemy import create_engine
 from bs4 import BeautifulSoup
 
@@ -17,7 +18,10 @@ from bs4 import BeautifulSoup
 class OnlineSymbolsSource:
     """Base class to create targeted symbols extractors
     Param:
-        url: Web source of symbol data to scrape"""
+        url: Web source of symbol data to scrape
+    Usage:
+        Instantiate object, then call .scrape_symbols_from_source()    
+    """
 
     def __init__(self, url=None):
         """Attributes:
@@ -26,7 +30,8 @@ class OnlineSymbolsSource:
         """
         self.name = "Undefined"
         self.url = url
-        self.data = fake_data(0)
+        self.data = None
+
 
     def __repr__(self):
         return f"Name: {self.name}\nURL : {self.url}\n{self.data}\n"
@@ -92,8 +97,46 @@ class OnlineSymbolsSource:
         self.to_parquet(file_path=file_path, file_name=f"{file_name}.parquet")
         self.to_sqlite(file_path=file_path, file_name=f"{file_name}.sqlite")
 
+    def update_sector_for(symbol):
+        yahoo = yf.Ticker(symbol)
+        sym_info = {
+            'Symbol': [symbol], 
+            'Sector': [yahoo.info.get('sector')], 
+            'Industry': [yahoo.info.get('industry')]
+        }
+        info_df = pd.DataFrame(sym_info)
+
+        return info_df
+
+    def update_sector(self):
+        updated_df = pd.DataFrame()
+        for i, symbol in self.data.iterrows():
+            info_df = self.update_sector_for(symbol)
+            updated_df = pd.concat([updated_df, info_df])
+            if i > 0:
+                continue
+
+        return updated_df
+
+    def load_from_csv(self, file_path=".", file_name="data.csv"):
+        data_df = pd.read_csv(os.path.join(file_path, file_name), index_col=False)
+        self.data = data_df
+
+    def load_from_parquet(self, file_path=".", file_name="data.parquet"):
+        data_df = pd.read_parquet(os.path.join(file_path, file_name))
+        self.data = data_df
+
+    def load_from_sqlite(self, file_path=".", file_name="data.parquet"):
+        engine = engine = create_engine(f"sqlite:///{os.path.join(file_path, file_name)}")
+        data_df = pd.read_sql('Symbols', engine, index_col=None)
+        self.data = data_df
+    
+
+
 class FirstRateData(OnlineSymbolsSource):
-    """First Rate Data symbol extractor implementation"""
+    """First Rate Data symbol extractor implementation
+        Instantiate object, then call .scrape_symbols_from_source
+    """
     LINE_MARKER = 'First Date:'
     URL = "https://firstratedata.com/b/22/stock-complete-historical-intraday"
 
@@ -101,7 +144,7 @@ class FirstRateData(OnlineSymbolsSource):
         ''' '''
         super().__init__(url=FirstRateData.URL)
         self.name = "First Rate Data"
-        self.data = self.scrape_symbols_from_source()
+
 
     def scrape_symbols_from_source(self):
         ''' Method:
@@ -112,7 +155,7 @@ class FirstRateData(OnlineSymbolsSource):
         symbols_df = self.convert_strings_to_dataframe(strings)
         symbols_df = self.fix_symbols_status(symbols_df)
 
-        return symbols_df
+        self.data = symbols_df
 
     def get_html_content(self, url):
         ''' Helper method to obtain raw source data '''
@@ -185,7 +228,9 @@ class FirstRateData(OnlineSymbolsSource):
         return symbol_code
 
 class EndOfDayData(OnlineSymbolsSource):
-    """EODData symbol extractor implementation"""
+    """EODData symbol extractor implementation
+        Instantiate object, then call .scrape_symbols_from_source
+    """
     URL = 'https://eoddata.com/stocklist'
     VALID_EXCHANGES = ['NASDAQ', 'AMEX','ASX','LSE','NYSE','SGX','TSX','TSXV']
     
@@ -197,18 +242,19 @@ class EndOfDayData(OnlineSymbolsSource):
         url = self.build_url(EndOfDayData.URL, self.exchange, 'A')
         super().__init__(url=url)
         self.name = 'End Of Day Data'
-        self.data = self.scrape_symbols_from_source()
+        #self.data = self.scrape_symbols_from_source()
 
     def scrape_symbols_from_source(self):
         letters = list(string.ascii_uppercase) + list(string.digits)
-        data = pd.DataFrame()
+        data_df = pd.DataFrame()
         for letter in letters:
             url = self.build_url(EndOfDayData.URL, self.exchange, letter)
             page_data = self.scrape_one_page(url)
-            data = pd.concat([data, page_data], ignore_index=True)
+            data_df = pd.concat([data_df, page_data], ignore_index=True)
 
-        data.drop_duplicates(subset='Symbol', keep='first', inplace=True)
-        return data
+        data_df.drop_duplicates(subset='Symbol', keep='first', inplace=True)
+        
+        self.data = data_df
 
     def scrape_one_page(self, url):
         symbols_data = pd.read_html(url)
@@ -274,6 +320,25 @@ if __name__ == "__main__":
     # df1.to_sqlite(file_path="tmp", file_name=f"{file_name}.sqlite")
 
 
-    for exchange in EndOfDayData.VALID_EXCHANGES:
-        data_df = EndOfDayData(exchange)
-        data_df.save_all_formats(file_path='2022-08-18', file_name_no_ext=exchange)
+    #for exchange in EndOfDayData.VALID_EXCHANGES:
+    #    data_df = EndOfDayData(exchange)
+    #    data_df.save_all_formats(file_path='2022-08-18', file_name_no_ext=exchange)
+
+    df = EndOfDayData('NASDAQ')
+    #df.load_from_csv('data','nasdaq.csv')
+    #df.load_from_parquet('data','nasdaq.parquet')
+    df.load_from_sqlite('data','nasdaq.sqlite')
+    print(df)
+    #df.scrape_symbols_from_source()
+
+    #df.to_csv('data','nasdaq.csv')
+    #print(df)
+
+
+    #    ticker = symbol.Symbol
+    #    yahoo = yf.Ticker(ticker)
+    #    print(f"AACG -> Sector  : {yahoo.info.get('sector')}")
+    #    print(f"AACG -> Industry: {yahoo.info.get('industry')}")
+    #    #df2 = df.update_sector()
+    #    #print(df2)
+

@@ -31,6 +31,8 @@ class OnlineSymbolsSource:
         self.name = "Undefined"
         self.url = url
         self.data = None
+        self.exchange = ''
+        self.yahoo_suffix = ''
 
 
     def __repr__(self):
@@ -97,26 +99,40 @@ class OnlineSymbolsSource:
         self.to_parquet(file_path=file_path, file_name=f"{file_name}.parquet")
         self.to_sqlite(file_path=file_path, file_name=f"{file_name}.sqlite")
 
-    def update_sector_for(symbol):
-        yahoo = yf.Ticker(symbol)
+    def augment_symbol_with_sector_info(self, symbol):
+        yahoo_ticker = f"{symbol.get('Symbol')}{self.yahoo_suffix}"
+        yahoo = yf.Ticker(yahoo_ticker)
         sym_info = {
-            'Symbol': [symbol], 
+            'Symbol': [symbol.get('Symbol')], 
             'Sector': [yahoo.info.get('sector')], 
-            'Industry': [yahoo.info.get('industry')]
+            'Industry': [yahoo.info.get('industry')],
+            'Type': [yahoo.info.get('quoteType')],
+            'Source': [yahoo.info.get('quoteTypeSourceName')],
+            'Website': [yahoo.info.get('website')],
+            'LogoUrl': [yahoo.info.get('logo_url')],
+            'Exchange': [yahoo.info.get('exchange')],
+            'ShortName': [yahoo.info.get('shortName')],
+            'LongName': [yahoo.info.get('longName')],
+            'Market': [yahoo.info.get('market')],
+            'FundFamily': [yahoo.info.get('fundFamily')],
+            'MarketCap': [yahoo.info.get('marketCap')],
+            'YahooTicker': yahoo_ticker,
+            'ExchangeCode': self.exchange,
+
         }
         info_df = pd.DataFrame(sym_info)
 
         return info_df
 
-    def update_sector(self):
-        updated_df = pd.DataFrame()
+    def augment_symbols_data(self):
+        new_df = pd.DataFrame()
         for i, symbol in self.data.iterrows():
-            info_df = self.update_sector_for(symbol)
-            updated_df = pd.concat([updated_df, info_df])
-            if i > 0:
-                continue
+            info_df = self.augment_symbol_with_sector_info(symbol)
+            new_df = pd.concat([new_df, info_df])
+            if i > 1:
+                return new_df
 
-        return updated_df
+        return new_df
 
     def load_from_csv(self, file_path=".", file_name="data.csv"):
         data_df = pd.read_csv(os.path.join(file_path, file_name), index_col=False)
@@ -233,15 +249,29 @@ class EndOfDayData(OnlineSymbolsSource):
     """
     URL = 'https://eoddata.com/stocklist'
     VALID_EXCHANGES = ['NASDAQ', 'AMEX','ASX','LSE','NYSE','SGX','TSX','TSXV']
-    
+
+    YAHOO_CODES = [
+        {'Code': 'NASDAQ', 'Name':'NASDAQ Stock Exchange', 'Country':'USA', 'Suffix':''},
+        {'Code': 'AMEX', 'Name':'American Stock Exchange', 'Country':'USA', 'Suffix':''},
+        {'Code': 'ASX', 'Name':'Australian Stock Exchange', 'Country':'Australia', 'Suffix':'.AX'},
+        {'Code': 'LSE', 'Name':'London Stock Exchange', 'Country':'United Kingdom', 'Suffix':'.L'},
+        {'Code': 'NYSE', 'Name':'New York Stock Exchange', 'Country':'USA', 'Suffix':''},
+        {'Code': 'SGX', 'Name':'Singapore Stock Exchange', 'Country':'Republic of Singapore', 'Suffix':'.SI'},
+        {'Code': 'TSX', 'Name':'Toronto Stock Exchange', 'Country':'Canada', 'Suffix':'.TO'},
+        {'Code': 'TSXV', 'Name':'Toronto Venture Exchange', 'Country':'Canada', 'Suffix':'.V'},
+    ]
+
+
+
     def __init__(self, exchange='NASDAQ'):
         if exchange not in EndOfDayData.VALID_EXCHANGES:
             raise ValueError('Unsupported Exchange value')
 
-        self.exchange = exchange
-        url = self.build_url(EndOfDayData.URL, self.exchange, 'A')
+        url = self.build_url(EndOfDayData.URL, exchange, 'A')
         super().__init__(url=url)
         self.name = 'End Of Day Data'
+        self.exchange = exchange
+        self.yahoo_suffix = [l for l in EndOfDayData.YAHOO_CODES if l.get('Code') == exchange][0].get('Suffix')
         #self.data = self.scrape_symbols_from_source()
 
     def scrape_symbols_from_source(self):
@@ -324,15 +354,11 @@ if __name__ == "__main__":
     #    data_df = EndOfDayData(exchange)
     #    data_df.save_all_formats(file_path='2022-08-18', file_name_no_ext=exchange)
 
-    df = EndOfDayData('NASDAQ')
-    #df.load_from_csv('data','nasdaq.csv')
-    #df.load_from_parquet('data','nasdaq.parquet')
-    df.load_from_sqlite('data','nasdaq.sqlite')
-    print(df)
-    #df.scrape_symbols_from_source()
+    df = EndOfDayData(exchange='TSX')
+    df.load_from_sqlite('data','tsx.sqlite')
+    augmented_df = df.augment_symbols_data()
+    print(augmented_df.iloc[0])
 
-    #df.to_csv('data','nasdaq.csv')
-    #print(df)
 
 
     #    ticker = symbol.Symbol

@@ -38,14 +38,21 @@ class TestSymbolsClass:
         },
     ]
 
-    new_symbol = [
+    new_symbols = [
         {
             "Symbol": "ZBID",
             "Name": "Bidon Added At The End",
             "ListedDt": datetime.datetime(2009, 6, 10).isoformat(),
             "LastDt": datetime.datetime(2022, 9, 6).isoformat(),
             "Status": "Test",
-        }
+        },
+        {
+            "Symbol": "ZGNX",
+            "Name": "Updated Zogenix",
+            "ListedDt": datetime.datetime(2010, 11, 23).isoformat(),
+            "LastDt": datetime.datetime(2022, 3, 4).isoformat(),
+            "Status": "Test Update",
+        },
     ]
 
     def test_Symbols_valid_instance(self):
@@ -136,38 +143,49 @@ class TestSymbolsClass:
     #
     # Test functions for Databases
     #
-    
+
     @pytest.fixture()
     def tmp_db_name(self):
-        tmp_path = 'tmp'
-        tmp_name = 'test2.sqlite'
+        tmp_path = "tmp"
+        tmp_name = "test2.sqlite"
         if not os.path.exists(tmp_path):
             os.mkdir(tmp_path)
         fname = os.path.join(tmp_path, tmp_name)
-        yield fname
-        if os.path.exists(fname):
-            os.remove(fname)
-        os.rmdir(tmp_path)
+        return fname
 
     def test_db_create_valid_db_name(self, tmp_db_name):
         instance = Symbols()
         db_name = instance.create_valid_db_name(tmp_db_name)
         assert db_name is not None
 
+    def test_db_no_param_create_valid_db_name(self, tmp_db_name):
+        instance = Symbols()
+        instance.db_name = tmp_db_name
+        db_name = instance.create_valid_db_name()
+        assert db_name is not None
+
     def test_db_create_db_engine(self, tmp_db_name):
         instance = Symbols()
-        engine = instance.create_db_engine(tmp_db_name)
-        assert engine is not None
+        db_name = instance.create_valid_db_name(tmp_db_name)
+        instance.create_db_engine(db_name)
+        assert instance.engine is not None
 
-    def test_db_save_symbols_to_db_data_none(self, tmp_db_name):        
+    def test_db_no_param_create_db_engine(self, tmp_db_name):
         instance = Symbols()
-        with pytest.raises(ValueError):
-            instance.save_symbols_to_db(data=None, db=tmp_db_name)
-    
-    def test_db_save_symbols_to_db_data_with_df(self, tmp_db_name):
+        instance.db_name = tmp_db_name
+        instance.create_db_engine()
+        assert instance.engine is not None
+
+    def test_db_save_symbols_to_db(self, tmp_db_name):
         instance = Symbols()
-        data_df = pd.DataFrame(TestSymbolsClass.symbols_data)
-        instance.save_symbols_to_db(data=data_df, db=tmp_db_name)
+        sym_data = pd.DataFrame(TestSymbolsClass.symbols_data)
+        instance.save_symbols_to_db(data=sym_data, db=tmp_db_name)
+        assert os.path.exists(tmp_db_name)
+
+    def test_db_no_param_save_symbols_to_db(self, tmp_db_name):
+        instance = Symbols()
+        instance.symbols_df = pd.DataFrame(TestSymbolsClass.symbols_data)
+        instance.save_symbols_to_db(db=tmp_db_name)  # No data param passed
         assert os.path.exists(tmp_db_name)
 
     def test_db_load_symbols_from_db(self, tmp_db_name):
@@ -183,16 +201,22 @@ class TestSymbolsClass:
     def test_db_merge_stored_and_new_symbols(self, tmp_db_name):
         instance = Symbols()
         df1 = pd.DataFrame(TestSymbolsClass.symbols_data)
-        df2 = pd.DataFrame(TestSymbolsClass.new_symbol)
-        total_merged = len(df1) + len(df2)
+        df2 = pd.DataFrame(TestSymbolsClass.new_symbols)
+        merge_set = set()
+        merge_set.update(df1.Symbol)
+        merge_set.update(df2.Symbol)
         merge_df = instance.merge_stored_and_new_symbols(df1, df2)
         print(merge_df)
-        assert len(merge_df) == total_merged
+        assert len(merge_df) == len(merge_set)
 
     def test_db_update_stored_symbols(self, tmp_db_name):
-        instance = Symbols()
         sym_df = pd.DataFrame(TestSymbolsClass.symbols_data)
-        new_df = pd.DataFrame(TestSymbolsClass.new_symbol)
+        new_df = pd.DataFrame(TestSymbolsClass.new_symbols)
+        instance = Symbols()
         instance.save_symbols_to_db(data=sym_df, db=tmp_db_name)
-        instance.symbols_df = new_df
-        instance.update_symbols_and_save(db=tmp_db_name)
+        instance.update_symbols_and_save(data=new_df, db=tmp_db_name)
+        symbols_set = set()
+        symbols_set.update(sym_df.Symbol)
+        symbols_set.update(new_df.Symbol)
+        check_saved_data = instance.load_symbols_from_db(db=tmp_db_name)
+        assert len(symbols_set) == len(check_saved_data)

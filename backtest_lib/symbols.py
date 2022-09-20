@@ -35,8 +35,8 @@ class OnlineSymbolsSource:
         self.yahoo_suffix = ''
 
 
-    def __repr__(self):
-        return f"Name: {self.name}\nURL : {self.url}\n{self.data}\n"
+    # def __repr__(self):
+    #     return f"Name: {self.name}\nURL : {self.url}\n{self.data}\n"
 
     def scrape_symbols_from_source(self):
         """Method:
@@ -125,14 +125,15 @@ class OnlineSymbolsSource:
         return info_df
 
     def augment_symbols_data(self):
+        print('Entering augment function....')
         new_df = pd.DataFrame()
         for i, symbol in self.data.iterrows():
-            info_df = self.augment_symbol_with_sector_info(symbol)
-            new_df = pd.concat([new_df, info_df])
-            if i > 1:
-                return new_df
+            #info_df = self.augment_symbol_with_sector_info(symbol)
+            #new_df = pd.concat([new_df, info_df], ignore_index=True)
+            print(f"\r{i}: {symbol.get('Symbol')}", end="")
 
-        return new_df
+        merged_df = pd.concat([self.data, new_df], on='Symbol', how='outer', ignore_index=True)
+        self.data = merged_df
 
     def load_from_csv(self, file_path=".", file_name="data.csv"):
         data_df = pd.read_csv(os.path.join(file_path, file_name), index_col=False)
@@ -354,10 +355,10 @@ if __name__ == "__main__":
     #    data_df = EndOfDayData(exchange)
     #    data_df.save_all_formats(file_path='2022-08-18', file_name_no_ext=exchange)
 
-    df = EndOfDayData(exchange='TSX')
-    df.load_from_sqlite('data','tsx.sqlite')
-    augmented_df = df.augment_symbols_data()
-    print(augmented_df.iloc[0])
+    df = EndOfDayData(exchange='NASDAQ')
+    df.load_from_csv('data','nasdaq.csv')
+    df.augment_symbols_data()
+    print(df.data)
 
 
 

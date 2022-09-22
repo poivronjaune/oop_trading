@@ -99,11 +99,11 @@ class OnlineSymbolsSource:
         self.to_parquet(file_path=file_path, file_name=f"{file_name}.parquet")
         self.to_sqlite(file_path=file_path, file_name=f"{file_name}.sqlite")
 
-    def augment_symbol_with_sector_info(self, symbol):
-        yahoo_ticker = f"{symbol.get('Symbol')}{self.yahoo_suffix}"
+    def augment_symbol_with_sector_info(self, ticker_symbol):
+        yahoo_ticker = f"{ticker_symbol}{self.yahoo_suffix}"
         yahoo = yf.Ticker(yahoo_ticker)
         sym_info = {
-            'Symbol': [symbol.get('Symbol')], 
+            'Symbol': [ticker_symbol], 
             'Sector': [yahoo.info.get('sector')], 
             'Industry': [yahoo.info.get('industry')],
             'Type': [yahoo.info.get('quoteType')],
@@ -125,14 +125,19 @@ class OnlineSymbolsSource:
         return info_df
 
     def augment_symbols_data(self):
-        print('Entering augment function....')
-        new_df = pd.DataFrame()
+        new_df = None
         for i, symbol in self.data.iterrows():
-            #info_df = self.augment_symbol_with_sector_info(symbol)
-            #new_df = pd.concat([new_df, info_df], ignore_index=True)
-            print(f"\r{i}: {symbol.get('Symbol')}", end="")
+            ticker_symbol = symbol.get('Symbol')
+            info_df = self.augment_symbol_with_sector_info(ticker_symbol)
+            if new_df is None:
+                new_df = info_df
+            else:
+                new_df = pd.concat([new_df, info_df], ignore_index=True)
+            print(f"\r{i}: {ticker_symbol}", end="")
 
-        merged_df = pd.concat([self.data, new_df], on='Symbol', how='outer', ignore_index=True)
+        print(f"\n")
+        merged_df = self.data.merge(new_df, on='Symbol', how='outer', suffixes=['_old',''])
+        merged_df = merged_df.loc[:, ~merged_df.columns.str.contains('_old')]
         self.data = merged_df
 
     def load_from_csv(self, file_path=".", file_name="data.csv"):
@@ -161,6 +166,7 @@ class FirstRateData(OnlineSymbolsSource):
         ''' '''
         super().__init__(url=FirstRateData.URL)
         self.name = "First Rate Data"
+        self.exchange = 'NASDAQ'
 
 
     def scrape_symbols_from_source(self):
@@ -355,12 +361,27 @@ if __name__ == "__main__":
     #    data_df = EndOfDayData(exchange)
     #    data_df.save_all_formats(file_path='2022-08-18', file_name_no_ext=exchange)
 
-    df = EndOfDayData(exchange='NASDAQ')
-    df.load_from_csv('data','nasdaq.csv')
+    #df = EndOfDayData(exchange='NASDAQ')
+    #df.load_from_csv('data','nasdaq.csv')
+    df = FirstRateData()
+    df.load_from_csv('data','first.csv')
     df.augment_symbols_data()
     print(df.data)
+    df.to_csv('data','first2.csv')
+    
+    # i = 0
+    # old_df = pd.DataFrame(df.data.iloc[i]).copy()
+    # print(type(old_df))
+    # print(old_df)
+    
+    # ticker = df.data.iloc[i].Symbol
+    # new_df = df.augment_symbol_with_sector_info(ticker)
+    # print(type(new_df))
+    # print(new_df)    
 
-
+    # merged_df = df.data.merge(new_df, on='Symbol', indicator=True)
+    # print(type(merged_df))
+    # print(merged_df)
 
     #    ticker = symbol.Symbol
     #    yahoo = yf.Ticker(ticker)

@@ -349,44 +349,17 @@ def fake_data(set_index):
 
 
 if __name__ == "__main__":
-    # df1 = FirstRateData()
-    # print(df1)
-    # file_name ='firstratedata'
-    # df1.to_csv(file_path="tmp", file_name=f"{file_name}.csv")
-    # df1.to_parquet(file_path="tmp", file_name=f"{file_name}.parquet")
-    # df1.to_sqlite(file_path="tmp", file_name=f"{file_name}.sqlite")
-
-
-    #for exchange in EndOfDayData.VALID_EXCHANGES:
-    #    data_df = EndOfDayData(exchange)
-    #    data_df.save_all_formats(file_path='2022-08-18', file_name_no_ext=exchange)
+    df1 = FirstRateData()
+    df1.scrape_symbols_from_source()
+    df1.augment_symbols_data()
+    print(df1)
+    file_name ='firstratedata'
+    df1.save_all_formats('data','firstratedata') # No file extension passed because all 3 types will be saved
 
     #df = EndOfDayData(exchange='NASDAQ')
     #df.load_from_csv('data','nasdaq.csv')
-    df = FirstRateData()
-    df.load_from_csv('data','first.csv')
-    df.augment_symbols_data()
-    print(df.data)
-    df.to_csv('data','first2.csv')
-    
-    # i = 0
-    # old_df = pd.DataFrame(df.data.iloc[i]).copy()
-    # print(type(old_df))
-    # print(old_df)
-    
-    # ticker = df.data.iloc[i].Symbol
-    # new_df = df.augment_symbol_with_sector_info(ticker)
-    # print(type(new_df))
-    # print(new_df)    
-
-    # merged_df = df.data.merge(new_df, on='Symbol', indicator=True)
-    # print(type(merged_df))
-    # print(merged_df)
-
-    #    ticker = symbol.Symbol
-    #    yahoo = yf.Ticker(ticker)
-    #    print(f"AACG -> Sector  : {yahoo.info.get('sector')}")
-    #    print(f"AACG -> Industry: {yahoo.info.get('industry')}")
-    #    #df2 = df.update_sector()
-    #    #print(df2)
-
+    #df = FirstRateData()
+    #df.load_from_csv('data','first.csv')
+    #df.augment_symbols_data()
+    #print(df.data)
+    #df.to_csv('data','first2.csv')

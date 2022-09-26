@@ -20,6 +20,7 @@ class Backtest:
     DEFAULT_SYMBOL = "AAPL"
     DEFAULT_START_DATE = datetime(2018, 1, 1)
     DEFAULT_END_DATE = datetime.now()
+    DEFAULT_INTERVAL = 'D' # 'D' : Daily, 'M' : Minute, 'H': Hour
 
     def __init__(self, symbol=None):
         if symbol == None:
@@ -29,7 +30,23 @@ class Backtest:
 
         self._end_date = Backtest.DEFAULT_END_DATE
         self._start_date = Backtest.DEFAULT_START_DATE
+        self.interval = Backtest.DEFAULT_INTERVAL
+        self.cash = 1000
         self.data = None
+
+    def __repr__(self) -> str:
+        str_items_in_data = "Empty" if self.data is None else f"{len(self.data)} items"
+
+        info_to_str = f"\nClass attributes:\n"
+        info_to_str += f"class        : {type(self).__name__} <- {self.__class__.__bases__[0].__name__}\n"
+        info_to_str += f"symbol       : {self.symbol}\n"
+        info_to_str += f"start date   : {self.start_date}\n"
+        info_to_str += f"end date     : {self.end_date}\n"
+        info_to_str += f"interval     : {self.interval}\n"
+        info_to_str += f"cash         : {self.cash}\n"
+        info_to_str += f"data         : {str_items_in_data}\n"
+
+        return info_to_str
 
     @property
     def symbol(self):
@@ -74,7 +91,3 @@ class Backtest:
             self._end_date = date_val
         else:
             raise ValueError("Invalid date or end_date < start_date.")
-
-    def download_prices(self):
-        data = yf.download(self.symbol, self.start_date, self.end_date)
-        self.data = data

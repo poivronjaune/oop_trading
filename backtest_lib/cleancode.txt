@@ -1,0 +1,36 @@
+1. Clean code is focused. 
+Each function, class, or module should do one thing and do it well.
+
+2. Clean code is easy to read and reason about. 
+According to Grady Booch, author of Object-Oriented Analysis and Design with Applications: clean code reads like well-written prose.
+3. Clean code is easy to debug.
+
+4. Clean code is easy to maintain. 
+That is it can easily be read and enhanced by other developers.
+
+5. Clean code is highly performant.
+
+6. Standards : PEP 8 (Python Enhancement Proposal)
+
+==============================================================
+
+1a : Functions should do one thing and do it well
+1b : Do not use flags or Boolean flags
+
+2a : Use long variable names that are easy to read
+2b : Use descriptive intention revealing names
+2c : Avoid using ambiguous shorthand
+2d : Always use the same vocabulary
+2e : class names should be CamelCase (MyClass)
+2f : variable names should be snake_case and all lowercase (first_name)
+2g : function names should be snake_case and all lowercase (quick_sort())
+2h : constants should be snake_case and all uppercase (PI = 3.14159)
+2i : modules should have short, snake_case names and all lowercase (numpy)
+2j : single quotes and double quotes are treated the same (just pick one and be consistent)
+
+
+4a : Start tracking codebase issues in your editor (Stepsize) ????
+4b : Don't use magic numbers
+4c : Be consistent with your function naming convention.
+
+

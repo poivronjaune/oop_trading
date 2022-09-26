@@ -1,4 +1,5 @@
 """ Symbols manager to extract and save information from inline sources """
+from msilib.schema import Class
 import os
 import re
 import string
@@ -15,7 +16,7 @@ from bs4 import BeautifulSoup
 # https://eoddata.com/symbols.aspx
 
 
-class OnlineSymbolsSource:
+class SymbolsSource:
     """Base class to create targeted symbols extractors
     Param:
         url: Web source of symbol data to scrape
@@ -30,9 +31,9 @@ class OnlineSymbolsSource:
         """
         self.name = "Generic Name"
         self.url = url
-        self.data = None
         self.exchange = ''
-        self.yahoo_suffix = ''
+        self.yahoo_suffix = ''        
+        self.data = None
 
 
     def __repr__(self):
@@ -107,16 +108,16 @@ class OnlineSymbolsSource:
         file_name = self.create_storage_folder_and_return_full_file_name(file_path, file_name)
         for i in range(0, len(self.data)):
             augmented_dict = self.augment_symbol_with_yahoo_info(self.data.iloc[i])
-            print(f"i:{i} ======================================================")
+            print(f"i:{i} / {len(self.data)} ===============================")
             print(type(augmented_dict))
             print(augmented_dict)
             print("=========================================================")
             augmented_df = pd.DataFrame([augmented_dict])
-            filename = 'data/augmented.csv'
-            if os.path.exists(filename):
-                augmented_df.to_csv(filename, header=False, index=False, mode='a')
+            #filename = 'data/augmented.csv'
+            if os.path.exists(file_name):
+                augmented_df.to_csv(file_name, header=False, index=False, mode='a')
             else:
-                augmented_df.to_csv(filename, header=True, index=False, mode='a')
+                augmented_df.to_csv(file_name, header=True, index=False, mode='a')
 
 
     def load_from_csv(self, file_path=".", file_name="data.csv"):
@@ -182,7 +183,7 @@ class OnlineSymbolsSource:
         self.to_sqlite(file_path=file_path, file_name=f"{file_name}.sqlite")    
 
 
-class FirstRateData(OnlineSymbolsSource):
+class FirstRateData(SymbolsSource):
     """First Rate Data symbol extractor implementation
         Instantiate object, then call .scrape_symbols_from_source
     """
@@ -191,7 +192,7 @@ class FirstRateData(OnlineSymbolsSource):
 
     def __init__(self, url=None):
         ''' '''
-        super().__init__(url=FirstRateData.URL)
+        super().__init__(url=self.URL)
         self.name = "First Rate Data"
         self.exchange = 'NASDAQ'
 
@@ -281,7 +282,7 @@ class FirstRateData(OnlineSymbolsSource):
         symbol_code = "" if symbol_code is None else symbol_code.group()
         return symbol_code
 
-class EndOfDayData(OnlineSymbolsSource):
+class EndOfDayData(SymbolsSource):
     """EODData symbol extractor implementation
         Instantiate object, then call .scrape_symbols_from_source
     """
@@ -305,7 +306,7 @@ class EndOfDayData(OnlineSymbolsSource):
         if exchange not in EndOfDayData.VALID_EXCHANGES:
             raise ValueError('Unsupported Exchange value')
 
-        url = self.build_url(EndOfDayData.URL, exchange, 'A')
+        url = self.build_url(self.URL, exchange, 'A')
         super().__init__(url=url)
         self.name = 'End Of Day Data'
         self.exchange = exchange
@@ -392,11 +393,11 @@ if __name__ == "__main__":
     #print(res)
 
     # ['NASDAQ', 'AMEX','ASX','LSE','NYSE','SGX','TSX','TSXV']
-    df2 = EndOfDayData('NASDAQ')
+    df2 = EndOfDayData('AMEX')
     print(df2)
     df2.scrape_symbols_from_source()
     print(df2)
-    res = df2.augment_symbols_to_csv('data','nasdaq-augmented.csv')
+    res = df2.augment_symbols_to_csv('data','amex-augmented.csv')
     print(type(res))
     print(res)
     

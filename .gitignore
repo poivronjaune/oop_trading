@@ -8,7 +8,6 @@ uninst.txt
 TDD_NOTES/
 tmp/
 *.sqlite
-data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

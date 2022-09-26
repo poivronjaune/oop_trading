@@ -28,21 +28,109 @@ class OnlineSymbolsSource:
         url: Web source to use, no default
         symbols_df: Dataframe to store extracted symbols
         """
-        self.name = "Undefined"
+        self.name = "Generic Name"
         self.url = url
         self.data = None
         self.exchange = ''
         self.yahoo_suffix = ''
 
 
-    # def __repr__(self):
-    #     return f"Name: {self.name}\nURL : {self.url}\n{self.data}\n"
+    def __repr__(self):
+        str_items_in_data = "Empty" if self.data is None else f"{len(self.data)} items"
+
+        info_to_str = f"\nClass attributes:\n"
+        info_to_str += f"class        : {type(self).__name__} <- {self.__class__.__bases__[0].__name__}\n"
+        info_to_str += f"name         : {self.name}\n"
+        info_to_str += f"exchange     : {self.exchange}\n"
+        info_to_str += f"url          : {self.url}\n"
+        info_to_str += f"yahoo_suffix : {'None' if self.yahoo_suffix == '' else self.yahoo_suffix}\n"
+        info_to_str += f"data         : {str_items_in_data}\n"
+        
+        #f"Name: {self.name}\nURL : {self.url}\n{self.data}\n"
+        return info_to_str
 
     def scrape_symbols_from_source(self):
         """Method:
             Abstract method needs to be implemented in subclass as extraction logic from source
         """
         raise NotImplementedError("Subclass must impleted this mehod")
+
+    def augment_symbol_with_yahoo_info(self, symbol_serie):
+        yahoo_ticker = f"{symbol_serie.Symbol}{self.yahoo_suffix}"
+        yahoo = yf.Ticker(yahoo_ticker)
+        symbol_info = symbol_serie.to_dict()
+        if yahoo:
+            yahoo_info = {
+                'Sector': yahoo.info.get('sector'),
+                'Industry': yahoo.info.get('industry'),
+                'Type': yahoo.info.get('quoteType'),
+                'Source': yahoo.info.get('quoteTypeSourceName'),
+                'Website': yahoo.info.get('website'),
+                'LogoUrl': yahoo.info.get('logo_url'),
+                'Exchange': yahoo.info.get('exchange'),
+                'ShortName': yahoo.info.get('shortName'),
+                'LongName': yahoo.info.get('longName'),
+                'Market': yahoo.info.get('market'),
+                'FundFamily': yahoo.info.get('fundFamily'),
+                'MarketCapValue': yahoo.info.get('marketCap'),
+                'YahooTicker': yahoo_ticker,
+                'ExchangeCode': self.exchange
+                }
+        else:
+            yahoo_info = {
+                'Sector': '',
+                'Industry': '',
+                'Type': '',
+                'Source': '',
+                'Website': '',
+                'LogoUrl': '',
+                'Exchange': '',
+                'ShortName': '',
+                'LongName': '',
+                'Market': '',
+                'FundFamily': '',
+                'MarketCapValue': '',
+                'YahooTicker': yahoo_ticker,
+                'ExchangeCode': self.exchange
+                }
+        #yahoo_serie = pd.Series(yahoo_info)
+        #augmented_serie = pd.concat([symbol_serie, yahoo_serie])
+        augmented_dict = symbol_info | yahoo_info
+        return augmented_dict
+
+    def augment_symbols_to_csv(self, file_path=".", file_name="augmented.csv"):
+        # load existing augmented file/data
+        # find first occurence of symbol info without augmented flag
+        # loop from this point to add agmented info
+        # save augmented files
+
+        file_name = self.create_storage_folder_and_return_full_file_name(file_path, file_name)
+        for i in range(0, len(self.data)):
+            augmented_dict = self.augment_symbol_with_yahoo_info(self.data.iloc[i])
+            print(f"i:{i} ======================================================")
+            print(type(augmented_dict))
+            print(augmented_dict)
+            print("=========================================================")
+            augmented_df = pd.DataFrame([augmented_dict])
+            filename = 'data/augmented.csv'
+            if os.path.exists(filename):
+                augmented_df.to_csv(filename, header=False, index=False, mode='a')
+            else:
+                augmented_df.to_csv(filename, header=True, index=False, mode='a')
+
+
+    def load_from_csv(self, file_path=".", file_name="data.csv"):
+        data_df = pd.read_csv(os.path.join(file_path, file_name), index_col=False)
+        self.data = data_df
+
+    def load_from_parquet(self, file_path=".", file_name="data.parquet"):
+        data_df = pd.read_parquet(os.path.join(file_path, file_name))
+        self.data = data_df
+
+    def load_from_sqlite(self, file_path=".", file_name="data.parquet"):
+        engine = engine = create_engine(f"sqlite:///{os.path.join(file_path, file_name)}")
+        data_df = pd.read_sql('Symbols', engine, index_col=None)
+        self.data = data_df
 
     def to_sqlite(self, file_path=".", file_name="data.sqlite"):
         """Method:
@@ -51,9 +139,7 @@ class OnlineSymbolsSource:
             file_path: defaults to current folder
             file_name: name of sqllite file to use as database, defaults to 'data.sqlite'
         """
-        file_name = self.create_storage_folder_and_return_full_file_name(
-            file_path, file_name
-        )
+        file_name = self.create_storage_folder_and_return_full_file_name(file_path, file_name)
         engine = create_engine(f"sqlite:///{file_name}")
         self.data.to_sql("Symbols", engine, if_exists="replace", index=False)
 
@@ -64,9 +150,7 @@ class OnlineSymbolsSource:
             file_path: defaults to current folder
             file_name: filename, defaults to 'data.parquet'
         """
-        file_name = self.create_storage_folder_and_return_full_file_name(
-            file_path, file_name
-        )
+        file_name = self.create_storage_folder_and_return_full_file_name(file_path, file_name)
         self.data.to_parquet(file_name, index=False)
 
     def to_csv(self, file_path=".", file_name="data.csv"):
@@ -76,9 +160,7 @@ class OnlineSymbolsSource:
             file_path: defaults to current folder
             file_name: filename, defaults to 'data.csv'
         """
-        file_name = self.create_storage_folder_and_return_full_file_name(
-            file_path, file_name
-        )
+        file_name = self.create_storage_folder_and_return_full_file_name(file_path, file_name)
         self.data.to_csv(file_name, index=False, sep=",", mode="w")
 
     def create_storage_folder_and_return_full_file_name(self, file_path, file_name):
@@ -97,62 +179,7 @@ class OnlineSymbolsSource:
         file_name = f"eoddata_{file_name_no_ext.lower()}"
         self.to_csv(file_path=file_path, file_name=f"{file_name}.csv")
         self.to_parquet(file_path=file_path, file_name=f"{file_name}.parquet")
-        self.to_sqlite(file_path=file_path, file_name=f"{file_name}.sqlite")
-
-    def augment_symbol_with_sector_info(self, ticker_symbol):
-        yahoo_ticker = f"{ticker_symbol}{self.yahoo_suffix}"
-        yahoo = yf.Ticker(yahoo_ticker)
-        sym_info = {
-            'Symbol': [ticker_symbol], 
-            'Sector': [yahoo.info.get('sector')], 
-            'Industry': [yahoo.info.get('industry')],
-            'Type': [yahoo.info.get('quoteType')],
-            'Source': [yahoo.info.get('quoteTypeSourceName')],
-            'Website': [yahoo.info.get('website')],
-            'LogoUrl': [yahoo.info.get('logo_url')],
-            'Exchange': [yahoo.info.get('exchange')],
-            'ShortName': [yahoo.info.get('shortName')],
-            'LongName': [yahoo.info.get('longName')],
-            'Market': [yahoo.info.get('market')],
-            'FundFamily': [yahoo.info.get('fundFamily')],
-            'MarketCap': [yahoo.info.get('marketCap')],
-            'YahooTicker': yahoo_ticker,
-            'ExchangeCode': self.exchange,
-
-        }
-        info_df = pd.DataFrame(sym_info)
-
-        return info_df
-
-    def augment_symbols_data(self):
-        new_df = None
-        for i, symbol in self.data.iterrows():
-            ticker_symbol = symbol.get('Symbol')
-            info_df = self.augment_symbol_with_sector_info(ticker_symbol)
-            if new_df is None:
-                new_df = info_df
-            else:
-                new_df = pd.concat([new_df, info_df], ignore_index=True)
-            print(f"\r{i}: {ticker_symbol}", end="")
-
-        print(f"\n")
-        merged_df = self.data.merge(new_df, on='Symbol', how='outer', suffixes=['_old',''])
-        merged_df = merged_df.loc[:, ~merged_df.columns.str.contains('_old')]
-        self.data = merged_df
-
-    def load_from_csv(self, file_path=".", file_name="data.csv"):
-        data_df = pd.read_csv(os.path.join(file_path, file_name), index_col=False)
-        self.data = data_df
-
-    def load_from_parquet(self, file_path=".", file_name="data.parquet"):
-        data_df = pd.read_parquet(os.path.join(file_path, file_name))
-        self.data = data_df
-
-    def load_from_sqlite(self, file_path=".", file_name="data.parquet"):
-        engine = engine = create_engine(f"sqlite:///{os.path.join(file_path, file_name)}")
-        data_df = pd.read_sql('Symbols', engine, index_col=None)
-        self.data = data_df
-    
+        self.to_sqlite(file_path=file_path, file_name=f"{file_name}.sqlite")    
 
 
 class FirstRateData(OnlineSymbolsSource):
@@ -182,7 +209,11 @@ class FirstRateData(OnlineSymbolsSource):
 
     def get_html_content(self, url):
         ''' Helper method to obtain raw source data '''
-        res = requests.get(url, timeout=5)
+        try:
+            res = requests.get(url, timeout=15)
+        except:
+            raise ValueError('Invalid request to web site')
+        
         html = None
         if FirstRateData.LINE_MARKER in res.text:
             html = res.text
@@ -349,17 +380,24 @@ def fake_data(set_index):
 
 
 if __name__ == "__main__":
-    df1 = FirstRateData()
-    df1.scrape_symbols_from_source()
-    df1.augment_symbols_data()
-    print(df1)
-    file_name ='firstratedata'
-    df1.save_all_formats('data','firstratedata') # No file extension passed because all 3 types will be saved
+    # df0 = OnlineSymbolsSource()
+    # print(df0)
 
-    #df = EndOfDayData(exchange='NASDAQ')
-    #df.load_from_csv('data','nasdaq.csv')
-    #df = FirstRateData()
-    #df.load_from_csv('data','first.csv')
-    #df.augment_symbols_data()
-    #print(df.data)
-    #df.to_csv('data','first2.csv')
+    #df1 = FirstRateData()
+    #print(df1)
+    #df1.scrape_symbols_from_source()
+    #print(df1)
+    #res = df1.augment_symbols_data()
+    #print(type(res))
+    #print(res)
+
+    # ['NASDAQ', 'AMEX','ASX','LSE','NYSE','SGX','TSX','TSXV']
+    df2 = EndOfDayData('NASDAQ')
+    print(df2)
+    df2.scrape_symbols_from_source()
+    print(df2)
+    res = df2.augment_symbols_to_csv('data','nasdaq-augmented.csv')
+    print(type(res))
+    print(res)
+    
+    

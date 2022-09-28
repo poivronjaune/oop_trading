@@ -28,7 +28,10 @@ def main():
     try:
         backtest = Backtest(symbol)
         prices = Prices(symbol)
-        
+        prices.download_prices()
+        backtest.data = prices.data
+        backtest.add_indicators()
+
         print(backtest)
         print(backtest.data)
     except RuntimeError as error_details:

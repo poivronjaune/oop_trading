@@ -2,7 +2,7 @@ yfinance
 #pandas included in yfinance
 #numpy  included in yfinance
 matplotlib
-ta
+pandas_ta
 
 # Web scraping packages
 requests

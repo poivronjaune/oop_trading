@@ -12,7 +12,6 @@ def test_if_all_packages_are_installed():
     import pandas
     import numpy
     import matplotlib
-    import ta
     import bs4
     import sqlalchemy
 

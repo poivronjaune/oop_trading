@@ -1,5 +1,5 @@
 """ Symbols manager to extract and save information from inline sources """
-from msilib.schema import Class
+import time
 import os
 import re
 import string
@@ -10,6 +10,8 @@ import pandas as pd
 import yfinance as yf
 from sqlalchemy import create_engine
 from bs4 import BeautifulSoup
+
+from skip_tickers import skipp
 
 # implement other sources
 # https://firstratedata.com/b/22/stock-complete-historical-intraday
@@ -57,9 +59,13 @@ class SymbolsSource:
         raise NotImplementedError("Subclass must impleted this mehod")
 
     def augment_symbol_with_yahoo_info(self, symbol_serie):
-        yahoo_ticker = f"{symbol_serie.Symbol}{self.yahoo_suffix}"
+        sym = symbol_serie.Symbol
+        if self.exchange in ['TSX','TSXV']:
+            sym = sym.replace(".", "-" )
+        yahoo_ticker = f"{sym}{self.yahoo_suffix}"
         yahoo = yf.Ticker(yahoo_ticker)
-        symbol_info = symbol_serie.to_dict()
+        #time.sleep(5)
+        
         if yahoo:
             yahoo_info = {
                 'Sector': yahoo.info.get('sector'),
@@ -96,6 +102,7 @@ class SymbolsSource:
                 }
         #yahoo_serie = pd.Series(yahoo_info)
         #augmented_serie = pd.concat([symbol_serie, yahoo_serie])
+        symbol_info = symbol_serie.to_dict()
         augmented_dict = symbol_info | yahoo_info
         return augmented_dict
 
@@ -104,6 +111,7 @@ class SymbolsSource:
         # find first occurence of symbol info without augmented flag
         # loop from this point to add agmented info
         # save augmented files
+
 
         file_name = self.create_storage_folder_and_return_full_file_name(file_path, file_name)
         for i in range(0, len(self.data)):
@@ -118,6 +126,7 @@ class SymbolsSource:
                 augmented_df.to_csv(file_name, header=False, index=False, mode='a')
             else:
                 augmented_df.to_csv(file_name, header=True, index=False, mode='a')
+
 
 
     def load_from_csv(self, file_path=".", file_name="data.csv"):
@@ -287,7 +296,7 @@ class EndOfDayData(SymbolsSource):
         Instantiate object, then call .scrape_symbols_from_source
     """
     URL = 'https://eoddata.com/stocklist'
-    VALID_EXCHANGES = ['NASDAQ', 'AMEX','ASX','LSE','NYSE','SGX','TSX','TSXV']
+    VALID_EXCHANGES = ['NASDAQ', 'AMEX','ASX','LSE','NYSE','TSX','TSXV']
 
     YAHOO_CODES = [
         {'Code': 'NASDAQ', 'Name':'NASDAQ Stock Exchange', 'Country':'USA', 'Suffix':''},
@@ -295,7 +304,6 @@ class EndOfDayData(SymbolsSource):
         {'Code': 'ASX', 'Name':'Australian Stock Exchange', 'Country':'Australia', 'Suffix':'.AX'},
         {'Code': 'LSE', 'Name':'London Stock Exchange', 'Country':'United Kingdom', 'Suffix':'.L'},
         {'Code': 'NYSE', 'Name':'New York Stock Exchange', 'Country':'USA', 'Suffix':''},
-        {'Code': 'SGX', 'Name':'Singapore Stock Exchange', 'Country':'Republic of Singapore', 'Suffix':'.SI'},
         {'Code': 'TSX', 'Name':'Toronto Stock Exchange', 'Country':'Canada', 'Suffix':'.TO'},
         {'Code': 'TSXV', 'Name':'Toronto Venture Exchange', 'Country':'Canada', 'Suffix':'.V'},
     ]
@@ -380,6 +388,7 @@ def fake_data(set_index):
     return symbols_df
 
 
+
 if __name__ == "__main__":
     # df0 = OnlineSymbolsSource()
     # print(df0)
@@ -393,11 +402,11 @@ if __name__ == "__main__":
     #print(res)
 
     # ['NASDAQ', 'AMEX','ASX','LSE','NYSE','SGX','TSX','TSXV']
-    df2 = EndOfDayData('AMEX')
+    df2 = EndOfDayData('TSXV')
     print(df2)
     df2.scrape_symbols_from_source()
     print(df2)
-    res = df2.augment_symbols_to_csv('data','amex-augmented.csv')
+    res = df2.augment_symbols_to_csv('data','tsxv-augmented.csv')
     print(type(res))
     print(res)
     

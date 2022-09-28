@@ -30,14 +30,16 @@ def main():
         prices = Prices(symbol)
         prices.download_prices()
         backtest.data = prices.data
-        backtest.add_indicators()
-
-        print(backtest)
-        print(backtest.data)
+        del prices
     except RuntimeError as error_details:
         # AttributeError, RuntimeError
         print(f"\nError: {error_details}\n")
         return
+
+    #backtest.add_indicators()
+
+    print(backtest)
+    print(backtest.data)
 
 
 if __name__ == "__main__":

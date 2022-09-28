@@ -296,7 +296,7 @@ class EndOfDayData(SymbolsSource):
         Instantiate object, then call .scrape_symbols_from_source
     """
     URL = 'https://eoddata.com/stocklist'
-    VALID_EXCHANGES = ['NASDAQ', 'AMEX','ASX','LSE','NYSE','SGX','TSX','TSXV']
+    VALID_EXCHANGES = ['NASDAQ', 'AMEX','ASX','LSE','NYSE','TSX','TSXV']
 
     YAHOO_CODES = [
         {'Code': 'NASDAQ', 'Name':'NASDAQ Stock Exchange', 'Country':'USA', 'Suffix':''},
@@ -304,7 +304,6 @@ class EndOfDayData(SymbolsSource):
         {'Code': 'ASX', 'Name':'Australian Stock Exchange', 'Country':'Australia', 'Suffix':'.AX'},
         {'Code': 'LSE', 'Name':'London Stock Exchange', 'Country':'United Kingdom', 'Suffix':'.L'},
         {'Code': 'NYSE', 'Name':'New York Stock Exchange', 'Country':'USA', 'Suffix':''},
-        {'Code': 'SGX', 'Name':'Singapore Stock Exchange', 'Country':'Republic of Singapore', 'Suffix':'.SI'},
         {'Code': 'TSX', 'Name':'Toronto Stock Exchange', 'Country':'Canada', 'Suffix':'.TO'},
         {'Code': 'TSXV', 'Name':'Toronto Venture Exchange', 'Country':'Canada', 'Suffix':'.V'},
     ]

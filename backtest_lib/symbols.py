@@ -402,11 +402,11 @@ if __name__ == "__main__":
     #print(res)
 
     # ['NASDAQ', 'AMEX','ASX','LSE','NYSE','SGX','TSX','TSXV']
-    df2 = EndOfDayData('TSXV')
+    df2 = EndOfDayData('NYSE')
     print(df2)
     df2.scrape_symbols_from_source()
     print(df2)
-    res = df2.augment_symbols_to_csv('data','tsxv-augmented.csv')
+    res = df2.augment_symbols_to_csv('data','nyse-augmented.csv')
     print(type(res))
     print(res)
     

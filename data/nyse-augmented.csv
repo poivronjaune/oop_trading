@@ -1,0 +1,4 @@
+Symbol,Name,Sector,Industry,Type,Source,Website,LogoUrl,Exchange,ShortName,LongName,Market,FundFamily,MarketCapValue,YahooTicker,ExchangeCode
+A,Agilent Technologies,Healthcare,Diagnostics & Research,EQUITY,,https://www.agilent.com,https://logo.clearbit.com/agilent.com,NYQ,"Agilent Technologies, Inc.","Agilent Technologies, Inc.",us_market,,36474171392,A,NYSE
+AA,Alcoa Corp,Basic Materials,Aluminum,EQUITY,,https://www.alcoa.com,https://logo.clearbit.com/alcoa.com,NYQ,Alcoa Corporation,Alcoa Corporation,us_market,,6445698560,AA,NYSE
+AAC,Ares Acquisition Corp Cl A,Financial Services,Shell Companies,EQUITY,,https://www.aresacquisitioncorporation.com,https://logo.clearbit.com/aresacquisitioncorporation.com,NYQ,Ares Acquisition Corporation,Ares Acquisition Corporation,us_market,,1240625024,AAC,NYSE

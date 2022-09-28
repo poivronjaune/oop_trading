@@ -11,7 +11,9 @@ import yfinance as yf
 from sqlalchemy import create_engine
 from bs4 import BeautifulSoup
 
-from skip_tickers import skipp
+import common
+
+#from skip_tickers import skipp
 
 # implement other sources
 # https://firstratedata.com/b/22/stock-complete-historical-intraday
@@ -113,7 +115,7 @@ class SymbolsSource:
         # save augmented files
 
 
-        file_name = self.create_storage_folder_and_return_full_file_name(file_path, file_name)
+        file_name = common.create_storage_folder_and_return_full_file_name(file_path, file_name)
         for i in range(0, len(self.data)):
             augmented_dict = self.augment_symbol_with_yahoo_info(self.data.iloc[i])
             print(f"i:{i} / {len(self.data)} ===============================")
@@ -149,7 +151,7 @@ class SymbolsSource:
             file_path: defaults to current folder
             file_name: name of sqllite file to use as database, defaults to 'data.sqlite'
         """
-        file_name = self.create_storage_folder_and_return_full_file_name(file_path, file_name)
+        file_name = common.create_storage_folder_and_return_full_file_name(file_path, file_name)
         engine = create_engine(f"sqlite:///{file_name}")
         self.data.to_sql("Symbols", engine, if_exists="replace", index=False)
 
@@ -160,7 +162,7 @@ class SymbolsSource:
             file_path: defaults to current folder
             file_name: filename, defaults to 'data.parquet'
         """
-        file_name = self.create_storage_folder_and_return_full_file_name(file_path, file_name)
+        file_name = common.create_storage_folder_and_return_full_file_name(file_path, file_name)
         self.data.to_parquet(file_name, index=False)
 
     def to_csv(self, file_path=".", file_name="data.csv"):
@@ -170,20 +172,21 @@ class SymbolsSource:
             file_path: defaults to current folder
             file_name: filename, defaults to 'data.csv'
         """
-        file_name = self.create_storage_folder_and_return_full_file_name(file_path, file_name)
+        #file_name = self.create_storage_folder_and_return_full_file_name(file_path, file_name)
+        file_name = common.create_storage_folder_and_return_full_file_name(file_path, file_name)
         self.data.to_csv(file_name, index=False, sep=",", mode="w")
 
-    def create_storage_folder_and_return_full_file_name(self, file_path, file_name):
-        """Method:
-            Create folder if non existent and return full path and filename
-        Params:
-            file_path: required parameter
-            file_name: required parameter
-        """
-        if not os.path.exists(file_path):
-            os.mkdir(file_path)
-        file_name = os.path.join(file_path, file_name)
-        return file_name
+    # def create_storage_folder_and_return_full_file_name(self, file_path, file_name):
+    #     """Method:
+    #         Create folder if non existent and return full path and filename
+    #     Params:
+    #         file_path: required parameter
+    #         file_name: required parameter
+    #     """
+    #     if not os.path.exists(file_path):
+    #         os.mkdir(file_path)
+    #     file_name = os.path.join(file_path, file_name)
+    #     return file_name
 
     def save_all_formats(self, file_path='tmp', file_name_no_ext='data'):
         file_name = f"eoddata_{file_name_no_ext.lower()}"
@@ -402,12 +405,16 @@ if __name__ == "__main__":
     #print(res)
 
     # ['NASDAQ', 'AMEX','ASX','LSE','NYSE','SGX','TSX','TSXV']
-    df2 = EndOfDayData('TSXV')
-    print(df2)
-    df2.scrape_symbols_from_source()
-    print(df2)
-    res = df2.augment_symbols_to_csv('data','tsxv-augmented.csv')
-    print(type(res))
-    print(res)
+    # df2 = EndOfDayData('TSXV')
+    # print(df2)
+    # df2.scrape_symbols_from_source()
+    # print(df2)
+    # res = df2.augment_symbols_to_csv('data','tsxv-augmented.csv')
+    # print(type(res))
+    # print(res)
     
+    df3 = EndOfDayData('TSXV')
+    df3.scrape_symbols_from_source()
+    df3.to_csv('tmp','test.csv')
+
     

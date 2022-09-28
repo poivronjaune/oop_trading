@@ -1,9 +1,8 @@
 import os
-
 import pandas as pd
 import yfinance as yf
-
 from datetime import datetime
+import common
 
 class Prices():
     DEFAULT_SYMBOL = "AAPL"
@@ -11,8 +10,11 @@ class Prices():
     DEFAULT_END_DATE = datetime.now()
     DEFAULT_INTERVAL = 'D' # 'D' : Daily, 'M' : Minute, 'H': Hour
 
-    def __init__(self):
-        self.symbol = Prices.DEFAULT_SYMBOL
+    def __init__(self, symbol=None):
+        if symbol is None:
+            self.symbol = Prices.DEFAULT_SYMBOL
+        else:
+            self.symbol = symbol
         self.start_date = Prices.DEFAULT_START_DATE
         self.end_date = Prices.DEFAULT_END_DATE
         self.interval = Prices.DEFAULT_INTERVAL
@@ -46,6 +48,9 @@ class Prices():
 
     def download_minute_prices(self, symbol):
         data = yf.download(symbol, period='max', interval='1m')
+        if len(data) < 1:
+            raise ValueError('No data returned from Yahoo')
+
         self.start_date = data.index.min().date()
         self.end_date = data.index.max().date()
         return data
@@ -59,15 +64,21 @@ class Prices():
         data = pd.read_csv(file_to_load, index_col=False)
         self.data = data
 
+    def to_csv(self, file_path='.', file_name='prices.csv'):
+        file_name = common.create_storage_folder_and_return_full_file_name(file_path, file_name)
+        self.data.to_csv(file_name, index=True, sep=',', mode='w')
+
 if __name__ == "__main__":
-    prices = Prices() # Default daily prices
+    prices = Prices()           # Need to set symbol if not using default 'AAPL'
+    prices.symbol = 'TSLA'
     prices.interval = 'M'
     prices.download_prices()
     print(prices)
     print(prices.data)
     print(f"Min date: {prices.data.index.min()}")
     print(f"Max date: {prices.data.index.max()}")
+    prices.to_csv('tmp','tsla_prices.csv', date_format=datetime.isoformat)
 
-    prices2 = Prices()
-    prices2.load_data_from_file('data','prices-aapl.csv')
+    # prices2 = Prices()
+    # prices2.load_data_from_file('data','prices-aapl.csv')
 

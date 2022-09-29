@@ -1,0 +1,3 @@
+identify the percentage change of the close price for each row of data
+If change > o then upday
+if change < 0 then downday

@@ -1,19 +1,25 @@
+import os
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import yfinance as yf
+import common
 from datetime import datetime, timedelta
 from dateutil import parser
-import yfinance as yf
 
+from scipy.signal import argrelextrema
 
 # UTILITY FUNCTION
-def _extract_date(date_param):
-    try:
-        date_val = parser.parse(date_param)
-    except Exception:
-        date_val = None
+# def _extract_date(date_param):
+#     try:
+#         date_val = parser.parse(date_param)
+#     except Exception:
+#         date_val = None
 
-    if isinstance(date_param, datetime):
-        date_val = date_param
+#     if isinstance(date_param, datetime):
+#         date_val = date_param
 
-    return date_val
+#     return date_val
 
 
 class Backtest:
@@ -72,7 +78,8 @@ class Backtest:
 
     @start_date.setter
     def start_date(self, date_param):
-        date_val = _extract_date(date_param)
+        #date_val = _extract_date(date_param)
+        date_val = common.extract_date(date_param)
 
         if (date_val is not None) and (date_val < self.end_date):
             self._start_date = date_val
@@ -85,9 +92,63 @@ class Backtest:
 
     @end_date.setter
     def end_date(self, date_param):
-        date_val = _extract_date(date_param)
+        #date_val = _extract_date(date_param)
+        date_val = common.extract_date(date_param)
 
         if (date_val is not None) and (date_val > self.start_date):
             self._end_date = date_val
         else:
             raise ValueError("Invalid date or end_date < start_date.")
+
+
+#https://raposa.trade/blog/higher-highs-lower-lows-and-calculating-price-trends-in-python/
+def plot1(data):
+    data['local_max'] = data['Close'][(data['Close'].shift(1) < data['Close']) & (data['Close'].shift(-1) < data['Close'])]
+    data['local_min'] = data['Close'][(data['Close'].shift(1) > data['Close']) & (data['Close'].shift(-1) > data['Close'])]
+
+    plt.figure(figsize=(15, 8))
+    plt.plot(data['Close'], zorder=0)
+    plt.scatter(data.index, prices_df['local_max'], s=100,
+      label='Maxima', marker='^', c=colors[1])
+    plt.scatter(data.index, prices_df['local_min'], s=100,
+      label='Minima', marker='v', c=colors[2])
+    plt.xlabel('Date')
+    plt.ylabel('Price ($)')
+    plt.title(f'Local Maxima and Minima for {ticker}')
+    plt.legend()
+    plt.show()
+
+def plot2(data, order):
+    max_idx = argrelextrema(data['Close'].values, np.greater, order=order)[0]
+    min_idx = argrelextrema(data['Close'].values, np.less, order=order)[0]
+    plt.figure(figsize=(15, 8))
+    plt.plot(data['Close'], zorder=0)
+    plt.scatter(data.iloc[max_idx].index, data.iloc[max_idx]['Close'],
+    label='Maxima', s=100, color=colors[1], marker='^')
+    plt.scatter(data.iloc[min_idx].index, data.iloc[min_idx]['Close'],
+    label='Minima', s=100, color=colors[2], marker='v')
+
+    plt.legend()
+    plt.show()    
+
+
+if __name__ == '__main__':
+    ticker = 'TSLA'
+    df = pd.read_csv(os.path.join('tmp','tsla_prices.csv'), index_col=0)
+    prices_df = df[-900:].copy()
+    prices_df['DayChange'] = prices_df['Close'].pct_change()
+    prices_df['Trend'] = np.where(prices_df['DayChange'] > 0, 'Up', 'Down')
+    prices_df['TrendUpStart'] = (prices_df['Trend'] == 'Up') & (prices_df['Trend'].shift(1) == 'Down')
+    prices_df['TrendDownStart'] = (prices_df['Trend'] == 'Down') & (prices_df['Trend'].shift(1) == 'Up')
+    prices_df['TrendStartDate'] = np.where(prices_df['TrendUpStart'] | prices_df['TrendDownStart'], prices_df.index, 0)
+    prices_df['TrendStartDate'] = prices_df['TrendStartDate'].replace(0, method='ffill')
+    prices_df['TrendSequence'] = prices_df.groupby('TrendStartDate').cumcount() + 1
+    
+
+    print(prices_df.tail(20))
+
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+    #plot1(prices_df)
+    plot2(prices_df, 5)
+

@@ -71,13 +71,13 @@ class Prices():
 if __name__ == "__main__":
     prices = Prices()           # Need to set symbol if not using default 'AAPL'
     prices.symbol = 'TSLA'
-    prices.interval = 'M'
+    prices.interval = 'D'
     prices.download_prices()
     print(prices)
     print(prices.data)
     print(f"Min date: {prices.data.index.min()}")
     print(f"Max date: {prices.data.index.max()}")
-    prices.to_csv('tmp','tsla_prices.csv', date_format=datetime.isoformat)
+    prices.to_csv('tmp','tsla_prices.csv')
 
     # prices2 = Prices()
     # prices2.load_data_from_file('data','prices-aapl.csv')

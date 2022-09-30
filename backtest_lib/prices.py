@@ -41,6 +41,7 @@ class Prices():
             self.data = self.download_minute_prices(self.symbol)
 
         self.data.insert(0, "Symbol", self.symbol)
+        self.data.index = self.data.index.astype("object")
 
     def download_daily_prices(self, symbol, start_date, end_date):
         data = yf.download(symbol, start_date, end_date, interval='1d')
@@ -62,6 +63,8 @@ class Prices():
             return
 
         data = pd.read_csv(file_to_load, index_col=False)
+        data.index = self.data.index.astype("object")
+        
         self.data = data
 
     def to_csv(self, file_path='.', file_name='prices.csv'):

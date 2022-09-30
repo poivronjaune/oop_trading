@@ -1,6 +1,7 @@
 yfinance
 #pandas included in yfinance
 #numpy  included in yfinance
+scipy
 matplotlib
 pandas_ta
 

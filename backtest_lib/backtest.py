@@ -4,10 +4,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import yfinance as yf
 import common
+
 from datetime import datetime, timedelta
 from dateutil import parser
-
 from scipy.signal import argrelextrema
+from prices import Prices
+
 
 # UTILITY FUNCTION
 # def _extract_date(date_param):
@@ -105,7 +107,8 @@ class Backtest:
 def plot1(data):
     data['local_max'] = data['Close'][(data['Close'].shift(1) < data['Close']) & (data['Close'].shift(-1) < data['Close'])]
     data['local_min'] = data['Close'][(data['Close'].shift(1) > data['Close']) & (data['Close'].shift(-1) > data['Close'])]
-
+    
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
     plt.figure(figsize=(15, 8))
     plt.plot(data['Close'], zorder=0)
     plt.scatter(data.index, prices_df['local_max'], s=100,
@@ -118,37 +121,55 @@ def plot1(data):
     plt.legend()
     plt.show()
 
-def plot2(data, order):
+def plot2(data, order):    
     max_idx = argrelextrema(data['Close'].values, np.greater, order=order)[0]
     min_idx = argrelextrema(data['Close'].values, np.less, order=order)[0]
+    
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
     plt.figure(figsize=(15, 8))
     plt.plot(data['Close'], zorder=0)
     plt.scatter(data.iloc[max_idx].index, data.iloc[max_idx]['Close'],
     label='Maxima', s=100, color=colors[1], marker='^')
-    plt.scatter(data.iloc[min_idx].index, data.iloc[min_idx]['Close'],
-    label='Minima', s=100, color=colors[2], marker='v')
+    #plt.scatter(data.iloc[min_idx].index, data.iloc[min_idx]['Close'],
+    #label='Minima', s=100, color=colors[2], marker='v')
 
     plt.legend()
     plt.show()    
 
+def higher_highs_lower_lows(data):
+    appended_data = None
+    return appended_data
 
 if __name__ == '__main__':
     ticker = 'TSLA'
     df = pd.read_csv(os.path.join('tmp','tsla_prices.csv'), index_col=0)
-    prices_df = df[-900:].copy()
+    prices_df = df[-50:].copy()
+
+    #prices = Prices()
+    #prices.symbol = ticker
+    #prices.download_prices()
+    #prices_df = prices.data[-400:].copy()
+    
+    # Little hack to make numpy work
+    #prices_df.index = prices_df.index.astype("object")
+        
     prices_df['DayChange'] = prices_df['Close'].pct_change()
     prices_df['Trend'] = np.where(prices_df['DayChange'] > 0, 'Up', 'Down')
     prices_df['TrendUpStart'] = (prices_df['Trend'] == 'Up') & (prices_df['Trend'].shift(1) == 'Down')
     prices_df['TrendDownStart'] = (prices_df['Trend'] == 'Down') & (prices_df['Trend'].shift(1) == 'Up')
+
     prices_df['TrendStartDate'] = np.where(prices_df['TrendUpStart'] | prices_df['TrendDownStart'], prices_df.index, 0)
     prices_df['TrendStartDate'] = prices_df['TrendStartDate'].replace(0, method='ffill')
     prices_df['TrendSequence'] = prices_df.groupby('TrendStartDate').cumcount() + 1
     
+    max_idx = argrelextrema(prices_df['Close'].values, np.greater, order=5)[0]
+    prices_df['HH'] = pd.NA
+    prices_df.at[38, 'HH'] = 1
 
-    print(prices_df.tail(20))
-
-    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-
+    print(prices_df[['Close','DayChange','Trend', 'TrendStartDate', 'TrendSequence', 'HH']].iloc[35:45])
+    print(type(prices_df.index))
+    print(max_idx)
+    #
     #plot1(prices_df)
-    plot2(prices_df, 5)
+    #plot2(prices_df, 5)
 

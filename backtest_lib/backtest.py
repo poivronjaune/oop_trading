@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from dateutil import parser
 
 from prices import Prices
-from indicators import peaks_and_troughs
+from indicators import peaks_and_troughs, plot_support_lines
 
 
 # UTILITY FUNCTION
@@ -175,4 +175,4 @@ if __name__ == '__main__':
     print(troughs)
     print(f"Index: {troughs.index.get_loc(troughs.index[-1])}, Date: {troughs.index[-1]}, Value: {troughs[-1]}")
 
-    plot2(prices_df)
+    plot_support_lines(prices_df)

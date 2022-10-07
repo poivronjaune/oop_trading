@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.signal import argrelextrema
 
 def peaks_and_troughs(data_df, order=5):
@@ -19,3 +20,18 @@ def peaks_and_troughs(data_df, order=5):
     data.iloc[min_idx, data.columns.get_loc('Troughs')] = data.iloc[min_idx]['Close']
 
     return data
+
+def plot_support_lines(data):
+    max_idx = data['Peaks'].dropna()
+    min_idx = data['Troughs'].dropna()
+
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    plt.figure(figsize=(15, 8))
+    plt.plot(data['Close'], zorder=0)
+    plt.scatter(max_idx.index, max_idx,
+                label='Maxima', s=100, color=colors[1], marker='^')    
+    plt.scatter(min_idx.index, min_idx,
+                label='Minima', s=100, color=colors[2], marker='v')
+
+    plt.legend()
+    plt.show()

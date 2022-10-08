@@ -2,8 +2,10 @@ yfinance
 #pandas included in yfinance
 #numpy  included in yfinance
 scipy
-matplotlib
 pandas_ta
+matplotlib
+dash
+dash-bootstrap-components
 
 # Web scraping packages
 requests

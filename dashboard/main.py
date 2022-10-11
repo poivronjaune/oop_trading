@@ -1,6 +1,7 @@
 from dash import Dash
 from dash_bootstrap_components.themes import BOOTSTRAP
 
+from ..backtest_lib.symbols import SymbolsSource
 from src.components.layout import create_layout
 
 def main() -> None:

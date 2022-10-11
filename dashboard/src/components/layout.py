@@ -1,16 +1,15 @@
 from dash import Dash, html
 
-def create_layout(app: Dash) -> html.Div:
+
+def create_layout(app: Dash, symbols_data) -> html.Div:
     return html.Div(
-        className="header",
+        className='container',
         children=[
-            html.H2(app.title),
-            html.Hr(),
-            children=[
-                classname="header-container",
-                children = [
-                    #TODO: ICICI
-                ]
-            ]
-        ]
+            app.title,
+            html.Hr()
+        ],
     )
+
+
+
+

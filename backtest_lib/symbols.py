@@ -13,7 +13,6 @@ from bs4 import BeautifulSoup
 
 import common
 
-#from skip_tickers import skipp
 
 # implement other sources
 # https://firstratedata.com/b/22/stock-complete-historical-intraday
@@ -405,16 +404,16 @@ if __name__ == "__main__":
     #print(res)
 
     # ['NASDAQ', 'AMEX','ASX','LSE','NYSE','SGX','TSX','TSXV']
-    # df2 = EndOfDayData('TSXV')
-    # print(df2)
-    # df2.scrape_symbols_from_source()
-    # print(df2)
-    # res = df2.augment_symbols_to_csv('data','tsxv-augmented.csv')
-    # print(type(res))
-    # print(res)
+    df2 = EndOfDayData('TSXV')
+    print(df2)
+    df2.scrape_symbols_from_source()
+    print(df2)
+    res = df2.augment_symbols_to_csv('data','tsxv-augmented.csv')
+    print(type(res))
+    print(res)
     
-    df3 = EndOfDayData('TSXV')
-    df3.scrape_symbols_from_source()
-    df3.to_csv('tmp','test.csv')
+    # df3 = EndOfDayData('TSXV')
+    # df3.scrape_symbols_from_source()
+    # df3.to_csv('tmp','test.csv')
 
     

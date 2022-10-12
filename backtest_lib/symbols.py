@@ -11,7 +11,7 @@ import yfinance as yf
 from sqlalchemy import create_engine
 from bs4 import BeautifulSoup
 
-import common
+from .common import create_storage_folder_and_return_full_file_name
 
 
 # implement other sources

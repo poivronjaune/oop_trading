@@ -2,7 +2,8 @@ import os
 import pandas as pd
 import yfinance as yf
 from datetime import datetime
-import common
+
+from .common import create_storage_folder_and_return_full_file_name
 
 class Prices():
     DEFAULT_SYMBOL = "AAPL"
@@ -68,7 +69,7 @@ class Prices():
         self.data = data
 
     def to_csv(self, file_path='.', file_name='prices.csv'):
-        file_name = common.create_storage_folder_and_return_full_file_name(file_path, file_name)
+        file_name = create_storage_folder_and_return_full_file_name(file_path, file_name)
         self.data.to_csv(file_name, index=True, sep=',', mode='w')
 
 if __name__ == "__main__":

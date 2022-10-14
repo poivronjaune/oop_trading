@@ -7,7 +7,7 @@ import yfinance as yf
 from datetime import datetime, timedelta
 from dateutil import parser
 
-from .common import extract_date
+import utils
 
 from .prices import Prices
 from .indicators import peaks_and_troughs, plot_support_lines
@@ -82,7 +82,7 @@ class Backtest:
     @start_date.setter
     def start_date(self, date_param):
         #date_val = _extract_date(date_param)
-        date_val = extract_date(date_param)
+        date_val = utils.extract_date(date_param)
 
         if (date_val is not None) and (date_val < self.end_date):
             self._start_date = date_val
@@ -96,7 +96,7 @@ class Backtest:
     @end_date.setter
     def end_date(self, date_param):
         #date_val = _extract_date(date_param)
-        date_val = extract_date(date_param)
+        date_val = utils.extract_date(date_param)
 
         if (date_val is not None) and (date_val > self.start_date):
             self._end_date = date_val

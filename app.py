@@ -2,9 +2,9 @@
 import os
 import sys
 
-from backtest_lib.symbols import SymbolsSource
-from backtest_lib.backtest import Backtest
-from backtest_lib.prices import Prices
+from stock_market.symbols import SymbolsSource
+from stock_market.backtest import Backtest
+from stock_market.prices import Prices
 
 from dashboard import Dashboard
 

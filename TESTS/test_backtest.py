@@ -1,7 +1,7 @@
 from datetime import datetime
 import pytest
 
-from backtest_lib.backtest import Backtest
+from stock_market.backtest import Backtest
 
 
 def test_always_True_to_establish_pytest_works():

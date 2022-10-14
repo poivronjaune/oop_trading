@@ -11,7 +11,8 @@ import yfinance as yf
 from sqlalchemy import create_engine
 from bs4 import BeautifulSoup
 
-from .common import create_storage_folder_and_return_full_file_name
+#from .utils import create_storage_folder_and_return_full_file_name
+import utils
 
 
 # implement other sources
@@ -114,7 +115,7 @@ class SymbolsSource:
         # save augmented files
 
 
-        file_name = common.create_storage_folder_and_return_full_file_name(file_path, file_name)
+        file_name = utils.create_storage_folder_and_return_full_file_name(file_path, file_name)
         for i in range(0, len(self.data)):
             augmented_dict = self.augment_symbol_with_yahoo_info(self.data.iloc[i])
             print(f"i:{i} / {len(self.data)} ===============================")
@@ -150,7 +151,7 @@ class SymbolsSource:
             file_path: defaults to current folder
             file_name: name of sqllite file to use as database, defaults to 'data.sqlite'
         """
-        file_name = common.create_storage_folder_and_return_full_file_name(file_path, file_name)
+        file_name = utils.create_storage_folder_and_return_full_file_name(file_path, file_name)
         engine = create_engine(f"sqlite:///{file_name}")
         self.data.to_sql("Symbols", engine, if_exists="replace", index=False)
 
@@ -161,7 +162,7 @@ class SymbolsSource:
             file_path: defaults to current folder
             file_name: filename, defaults to 'data.parquet'
         """
-        file_name = common.create_storage_folder_and_return_full_file_name(file_path, file_name)
+        file_name = utils.create_storage_folder_and_return_full_file_name(file_path, file_name)
         self.data.to_parquet(file_name, index=False)
 
     def to_csv(self, file_path=".", file_name="data.csv"):
@@ -172,7 +173,7 @@ class SymbolsSource:
             file_name: filename, defaults to 'data.csv'
         """
         #file_name = self.create_storage_folder_and_return_full_file_name(file_path, file_name)
-        file_name = common.create_storage_folder_and_return_full_file_name(file_path, file_name)
+        file_name = utils.create_storage_folder_and_return_full_file_name(file_path, file_name)
         self.data.to_csv(file_name, index=False, sep=",", mode="w")
 
     # def create_storage_folder_and_return_full_file_name(self, file_path, file_name):
@@ -408,7 +409,7 @@ if __name__ == "__main__":
     print(df2)
     df2.scrape_symbols_from_source()
     print(df2)
-    res = df2.augment_symbols_to_csv('data','tsxv-augmented.csv')
+    res = df2.augment_symbols_to_csv('datasets','tsxv-augmented.csv')
     print(type(res))
     print(res)
     

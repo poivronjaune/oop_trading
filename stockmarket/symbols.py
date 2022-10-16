@@ -11,14 +11,24 @@ import yfinance as yf
 from sqlalchemy import create_engine
 from bs4 import BeautifulSoup
 
-#from .utils import create_storage_folder_and_return_full_file_name
-import utils
-
+try:
+    from . import utils
+except:
+    import utils
 
 # implement other sources
 # https://firstratedata.com/b/22/stock-complete-historical-intraday
 # https://eoddata.com/symbols.aspx
 
+YAHOO_CODES = [
+    {'Code': 'NASDAQ', 'Name':'NASDAQ Stock Exchange', 'Country':'USA', 'Suffix':''},
+    {'Code': 'AMEX', 'Name':'American Stock Exchange', 'Country':'USA', 'Suffix':''},
+    {'Code': 'ASX', 'Name':'Australian Stock Exchange', 'Country':'Australia', 'Suffix':'.AX'},
+    {'Code': 'LSE', 'Name':'London Stock Exchange', 'Country':'United Kingdom', 'Suffix':'.L'},
+    {'Code': 'NYSE', 'Name':'New York Stock Exchange', 'Country':'USA', 'Suffix':''},
+    {'Code': 'TSX', 'Name':'Toronto Stock Exchange', 'Country':'Canada', 'Suffix':'.TO'},
+    {'Code': 'TSXV', 'Name':'Toronto Venture Exchange', 'Country':'Canada', 'Suffix':'.V'},
+]
 
 class SymbolsSource:
     """Base class to create targeted symbols extractors
@@ -301,15 +311,15 @@ class EndOfDayData(SymbolsSource):
     URL = 'https://eoddata.com/stocklist'
     VALID_EXCHANGES = ['NASDAQ', 'AMEX','ASX','LSE','NYSE','TSX','TSXV']
 
-    YAHOO_CODES = [
-        {'Code': 'NASDAQ', 'Name':'NASDAQ Stock Exchange', 'Country':'USA', 'Suffix':''},
-        {'Code': 'AMEX', 'Name':'American Stock Exchange', 'Country':'USA', 'Suffix':''},
-        {'Code': 'ASX', 'Name':'Australian Stock Exchange', 'Country':'Australia', 'Suffix':'.AX'},
-        {'Code': 'LSE', 'Name':'London Stock Exchange', 'Country':'United Kingdom', 'Suffix':'.L'},
-        {'Code': 'NYSE', 'Name':'New York Stock Exchange', 'Country':'USA', 'Suffix':''},
-        {'Code': 'TSX', 'Name':'Toronto Stock Exchange', 'Country':'Canada', 'Suffix':'.TO'},
-        {'Code': 'TSXV', 'Name':'Toronto Venture Exchange', 'Country':'Canada', 'Suffix':'.V'},
-    ]
+    # YAHOO_CODES = [
+    #     {'Code': 'NASDAQ', 'Name':'NASDAQ Stock Exchange', 'Country':'USA', 'Suffix':''},
+    #     {'Code': 'AMEX', 'Name':'American Stock Exchange', 'Country':'USA', 'Suffix':''},
+    #     {'Code': 'ASX', 'Name':'Australian Stock Exchange', 'Country':'Australia', 'Suffix':'.AX'},
+    #     {'Code': 'LSE', 'Name':'London Stock Exchange', 'Country':'United Kingdom', 'Suffix':'.L'},
+    #     {'Code': 'NYSE', 'Name':'New York Stock Exchange', 'Country':'USA', 'Suffix':''},
+    #     {'Code': 'TSX', 'Name':'Toronto Stock Exchange', 'Country':'Canada', 'Suffix':'.TO'},
+    #     {'Code': 'TSXV', 'Name':'Toronto Venture Exchange', 'Country':'Canada', 'Suffix':'.V'},
+    # ]
 
 
 
@@ -321,7 +331,7 @@ class EndOfDayData(SymbolsSource):
         super().__init__(url=url)
         self.name = 'End Of Day Data'
         self.exchange = exchange
-        self.yahoo_suffix = [l for l in EndOfDayData.YAHOO_CODES if l.get('Code') == exchange][0].get('Suffix')
+        self.yahoo_suffix = [l for l in YAHOO_CODES if l.get('Code') == exchange][0].get('Suffix')
         #self.data = self.scrape_symbols_from_source()
 
     def scrape_symbols_from_source(self):
@@ -409,7 +419,7 @@ if __name__ == "__main__":
     print(df2)
     df2.scrape_symbols_from_source()
     print(df2)
-    res = df2.augment_symbols_to_csv('datasets','tsxv-augmented.csv')
+    res = df2.augment_symbols_to_csv('storage','tsxv-augmented.csv')
     print(type(res))
     print(res)
     

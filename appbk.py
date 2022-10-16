@@ -2,9 +2,9 @@
 import os
 import sys
 
-from stock_market.symbols import SymbolsSource
-from stock_market.backtest import Backtest
-from stock_market.prices import Prices
+from stockmarket.symbols import SymbolsSource
+from stockmarket.backtest import Backtest
+from stockmarket.prices import Prices
 
 
 def argv_parse():

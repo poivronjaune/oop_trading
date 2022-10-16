@@ -7,7 +7,7 @@ import pytest
 import pandas as pd
 #from bs4 import BeautifulSoup, element
 from sqlalchemy import create_engine
-from stock_market.symbols import LINE_MARKER, Symbols
+from stockmarket.symbols import LINE_MARKER, Symbols
 
 
 class TestSymbolsClass:

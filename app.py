@@ -1,12 +1,14 @@
 """ Backtesting app for stock marketpartofolio automation """
+from lib2to3.pygram import Symbols
 import os
 import sys
 
-from stock_market.symbols import SymbolsSource
-from stock_market.backtest import Backtest
-from stock_market.prices import Prices
+from stockmarket import symbols
+from stockmarket.backtest import Backtest
+from stockmarket.prices import Prices
 
 from dashboard import Dashboard
+
 
 def old_main():
     """Get price data, analyse trades, print chart and produce log file"""
@@ -29,8 +31,12 @@ def old_main():
 
 
 def main():
-    web_dash = Dashboard()
+    data = {
+        "exchanges": symbols.YAHOO_CODES
+    }
+    web_dash = Dashboard(data)
     web_dash.run()
 
 if __name__ == "__main__":
     main()
+

@@ -33,4 +33,7 @@ That is it can easily be read and enhanced by other developers.
 4b : Don't use magic numbers
 4c : Be consistent with your function naming convention.
 
+=============================================
+
+Folder structures
 

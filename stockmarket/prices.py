@@ -3,8 +3,11 @@ import pandas as pd
 import yfinance as yf
 from datetime import datetime
 
-#from .utils import create_storage_folder_and_return_full_file_name
-import utils
+try:
+    from . import utils
+except:
+    import utils
+
 
 class Prices():
     DEFAULT_SYMBOL = "AAPL"

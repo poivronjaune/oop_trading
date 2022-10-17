@@ -30,6 +30,19 @@ YAHOO_CODES = [
     {'Code': 'TSXV', 'Name':'Toronto Venture Exchange', 'Country':'Canada', 'Suffix':'.V'},
 ]
 
+class Symbols:
+    def __init__(self):
+        github = 'https://raw.githubusercontent.com/MapleFrogStudio/DATASETS/main/STOCK_SYMBOLS/YAHOO'
+        all_exchanges = [symbol.get('Code') for symbol in YAHOO_CODES]
+        all_symbols = pd.DataFrame()
+        for symbol in all_exchanges:
+            data = pd.read_csv(f'{github}/{symbol.lower()}.csv', index_col='Symbol')
+            all_symbols = pd.concat([all_symbols,data])
+        
+        self.all = all_symbols
+
+
+# Classes to scrape and organize symbols used manually by adjusting main()
 class SymbolsSource:
     """Base class to create targeted symbols extractors
     Param:
@@ -48,7 +61,6 @@ class SymbolsSource:
         self.exchange = ''
         self.yahoo_suffix = ''        
         self.data = None
-
 
     def __repr__(self):
         str_items_in_data = "Empty" if self.data is None else f"{len(self.data)} items"
@@ -186,18 +198,6 @@ class SymbolsSource:
         file_name = utils.create_storage_folder_and_return_full_file_name(file_path, file_name)
         self.data.to_csv(file_name, index=False, sep=",", mode="w")
 
-    # def create_storage_folder_and_return_full_file_name(self, file_path, file_name):
-    #     """Method:
-    #         Create folder if non existent and return full path and filename
-    #     Params:
-    #         file_path: required parameter
-    #         file_name: required parameter
-    #     """
-    #     if not os.path.exists(file_path):
-    #         os.mkdir(file_path)
-    #     file_name = os.path.join(file_path, file_name)
-    #     return file_name
-
     def save_all_formats(self, file_path='tmp', file_name_no_ext='data'):
         file_name = f"eoddata_{file_name_no_ext.lower()}"
         self.to_csv(file_path=file_path, file_name=f"{file_name}.csv")
@@ -311,18 +311,6 @@ class EndOfDayData(SymbolsSource):
     URL = 'https://eoddata.com/stocklist'
     VALID_EXCHANGES = ['NASDAQ', 'AMEX','ASX','LSE','NYSE','TSX','TSXV']
 
-    # YAHOO_CODES = [
-    #     {'Code': 'NASDAQ', 'Name':'NASDAQ Stock Exchange', 'Country':'USA', 'Suffix':''},
-    #     {'Code': 'AMEX', 'Name':'American Stock Exchange', 'Country':'USA', 'Suffix':''},
-    #     {'Code': 'ASX', 'Name':'Australian Stock Exchange', 'Country':'Australia', 'Suffix':'.AX'},
-    #     {'Code': 'LSE', 'Name':'London Stock Exchange', 'Country':'United Kingdom', 'Suffix':'.L'},
-    #     {'Code': 'NYSE', 'Name':'New York Stock Exchange', 'Country':'USA', 'Suffix':''},
-    #     {'Code': 'TSX', 'Name':'Toronto Stock Exchange', 'Country':'Canada', 'Suffix':'.TO'},
-    #     {'Code': 'TSXV', 'Name':'Toronto Venture Exchange', 'Country':'Canada', 'Suffix':'.V'},
-    # ]
-
-
-
     def __init__(self, exchange='NASDAQ'):
         if exchange not in EndOfDayData.VALID_EXCHANGES:
             raise ValueError('Unsupported Exchange value')
@@ -401,11 +389,7 @@ def fake_data(set_index):
     return symbols_df
 
 
-
-if __name__ == "__main__":
-    # df0 = OnlineSymbolsSource()
-    # print(df0)
-
+def main():
     #df1 = FirstRateData()
     #print(df1)
     #df1.scrape_symbols_from_source()
@@ -426,5 +410,9 @@ if __name__ == "__main__":
     # df3 = EndOfDayData('TSXV')
     # df3.scrape_symbols_from_source()
     # df3.to_csv('tmp','test.csv')
+
+if __name__ == "__main__":
+    main()
+
 
     

@@ -4,7 +4,8 @@ from . import exchange_dropdown
 
 def create_layout(app: Dash, data) -> html.Div:
     # Seperate data structure into logical chuncks
-    exchanges = data.get('exchanges')
+    all_exchanges = data.get('exchanges')
+    all_symbols = data.get('symbols')
 
     return html.Div(
         className='container',
@@ -14,7 +15,7 @@ def create_layout(app: Dash, data) -> html.Div:
             html.Div(
                 className='filter_inputs',
                 children=[
-                    exchange_dropdown.render(app, exchanges)
+                    exchange_dropdown.render(app, all_exchanges),
                 ], style={'display':'flex'}
             )
         ],

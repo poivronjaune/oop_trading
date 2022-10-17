@@ -31,8 +31,11 @@ def old_main():
 
 
 def main():
+    all_symbols = symbols.Symbols().all
+
     data = {
-        "exchanges": symbols.YAHOO_CODES
+        "exchanges": symbols.YAHOO_CODES,
+        "symbols" : all_symbols
     }
     web_dash = Dashboard(data)
     web_dash.run()

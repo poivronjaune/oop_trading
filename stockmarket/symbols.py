@@ -41,6 +41,14 @@ class Symbols:
         
         self.all = all_symbols
 
+    def filter(self, exchange=None, type=None, Industry=None, Sector=None):
+        if exchange is not None:
+            exchange_filter = self.all.ExchangeCode == exchange
+        
+
+        filtered_data = self.all.loc[exchange_filter].copy()
+        return filtered_data
+
 
 # Classes to scrape and organize symbols used manually by adjusting main()
 class SymbolsSource:
